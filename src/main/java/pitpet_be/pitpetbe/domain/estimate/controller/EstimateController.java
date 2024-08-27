@@ -12,7 +12,7 @@ import pitpet_be.pitpetbe.global.response.ApiResponse;
 @RequiredArgsConstructor
 public class EstimateController {
     @GetMapping("/{testId}")
-    public ApiResponse<String> deleteLottery(@PathVariable Long testId) {
+    public ApiResponse<String> ExampleController(@PathVariable Long testId) {
         return ApiResponse.onSuccess(testId + "견적서가 직성되었습니다.");
     }
 
