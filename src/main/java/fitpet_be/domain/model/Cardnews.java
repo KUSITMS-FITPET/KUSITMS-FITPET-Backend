@@ -1,5 +1,6 @@
 package fitpet_be.domain.model;
 
+import fitpet_be.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "CardNews")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Cardnews {
+public class Cardnews extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
