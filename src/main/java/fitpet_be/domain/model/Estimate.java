@@ -48,9 +48,9 @@ public class Estimate {
 
     @Builder
     public Estimate(String petInfo, String petName,
-                    Long petAge, String petSpecies,
-                    String phoneNumber, String moreInfo,
-                    boolean agreement) {
+        Long petAge, String petSpecies,
+        String phoneNumber, String moreInfo,
+        boolean agreement) {
 
         this.petInfo = petInfo;
         this.petName = petName;
@@ -61,5 +61,6 @@ public class Estimate {
         this.agreement = agreement;
 
     }
+
 
 }
