@@ -1,8 +1,7 @@
 package fitpet_be.domain.repository;
 
-import fitpet_be.domain.model.Estimate;
-import org.springframework.data.jpa.repository.JpaRepository;
+import fitpet_be.infrastructure.persistence.JpaEstimateRepository;
 
-public interface EstimateRepository {
+public interface EstimateRepository extends JpaEstimateRepository {
 
 }
