@@ -1,4 +1,4 @@
-package fitpet_be.application.request;
+package fitpet_be.application.dto.request;
 
 import fitpet_be.domain.model.Test;
 import lombok.Builder;

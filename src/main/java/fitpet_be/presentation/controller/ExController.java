@@ -1,6 +1,6 @@
 package fitpet_be.presentation.controller;
 
-import fitpet_be.application.response.TestResponse;
+import fitpet_be.application.dto.response.TestResponse;
 import fitpet_be.application.service.TestService;
 import fitpet_be.common.ApiResponse;
 import fitpet_be.presentation.request.TestRequest;

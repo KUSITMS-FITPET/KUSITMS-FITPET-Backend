@@ -1,6 +1,6 @@
 package fitpet_be.presentation.request;
 
-import fitpet_be.application.request.TestServiceRequest;
+import fitpet_be.application.dto.request.TestServiceRequest;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;

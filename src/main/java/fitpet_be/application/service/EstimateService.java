@@ -1,6 +1,6 @@
 package fitpet_be.application.service;
 
-import fitpet_be.application.request.EstimateRequest;
+import fitpet_be.application.dto.request.EstimateServiceRequest;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
 import java.io.File;
@@ -25,7 +25,7 @@ public class EstimateService {
     public static final String FILE_PATH = "/Users/jungheechan/Desktop/estimate.xlsx";
 
     @Transactional
-    public void createEstimateService(EstimateRequest estimateRequest) throws IOException {
+    public void createEstimateService(EstimateServiceRequest estimateServiceRequest) throws IOException {
         File file = new File(FILE_PATH);
 
         if (!file.exists()) {
@@ -35,9 +35,9 @@ public class EstimateService {
         try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(file))) {
             XSSFSheet sheet = workbook.getSheetAt(0);
 
-            setValue(sheet, "C8", String.valueOf(estimateRequest.getPetInfo()));
-            setValue(sheet, "C9", String.valueOf(estimateRequest.getPetSpecies()));
-            setValue(sheet, "C11", String.valueOf(estimateRequest.getPetAge()));
+            setValue(sheet, "C8", String.valueOf(estimateServiceRequest.getPetInfo()));
+            setValue(sheet, "C9", String.valueOf(estimateServiceRequest.getPetSpecies()));
+            setValue(sheet, "C11", String.valueOf(estimateServiceRequest.getPetAge()));
 
             try (FileOutputStream fileOut = new FileOutputStream(file)) {
                 workbook.write(fileOut);
@@ -48,7 +48,7 @@ public class EstimateService {
             throw e;
         }
 
-        saveEstimate(estimateRequest);
+        saveEstimate(estimateServiceRequest);
     }
 
     private void setValue(XSSFSheet sheet, String position, String value) {
@@ -63,8 +63,8 @@ public class EstimateService {
         }
     }
 
-    private void saveEstimate(EstimateRequest estimateRequest) {
-        Estimate estimate = estimateRequest.toEntity(estimateRequest);
+    private void saveEstimate(EstimateServiceRequest estimateServiceRequest) {
+        Estimate estimate = estimateServiceRequest.toEntity(estimateServiceRequest);
         estimateRepository.save(estimate);
     }
 
