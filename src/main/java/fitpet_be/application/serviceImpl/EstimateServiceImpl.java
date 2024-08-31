@@ -34,11 +34,10 @@ public class EstimateServiceImpl implements EstimateService {
         }
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(file))) {
-            XSSFSheet sheet = workbook.getSheetAt(0);
 
-            setValue(sheet, "C8", String.valueOf(estimateServiceRequest.getPetInfo()));
-            setValue(sheet, "C9", String.valueOf(estimateServiceRequest.getPetSpecies()));
-            setValue(sheet, "C11", String.valueOf(estimateServiceRequest.getPetAge()));
+            setSheet(workbook, 0, estimateServiceRequest);
+            setSheet(workbook, 1, estimateServiceRequest);
+            setSheet(workbook, 2, estimateServiceRequest);
 
             try (FileOutputStream fileOut = new FileOutputStream(file)) {
                 workbook.write(fileOut);
@@ -50,6 +49,15 @@ public class EstimateServiceImpl implements EstimateService {
         }
 
         saveEstimate(estimateServiceRequest);
+    }
+
+    private void setSheet(XSSFWorkbook workbook, int setSheet, EstimateServiceRequest estimateServiceRequest){
+        XSSFSheet sheet = workbook.getSheetAt(setSheet);
+
+        setValue(sheet, "C8", String.valueOf(estimateServiceRequest.getPetInfo()));
+        setValue(sheet, "C9", String.valueOf(estimateServiceRequest.getPetSpecies()));
+        setValue(sheet, "C11", String.valueOf(estimateServiceRequest.getPetAge()));
+
     }
 
     private void setValue(XSSFSheet sheet, String position, String value) {
