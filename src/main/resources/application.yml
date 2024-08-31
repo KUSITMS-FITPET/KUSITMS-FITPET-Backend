@@ -1,2 +1,21 @@
 server:
   port: 8080
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+
+cloud:
+    aws:
+      s3:
+        bucket: fitpetbucket
+      credentials:
+        access-key: AKIA2R3FKW6IGGAOQB7P
+        secret-key: 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
+      region:
+        static: us-east-2
+        auto: false
+      stack:
+        auto: false
