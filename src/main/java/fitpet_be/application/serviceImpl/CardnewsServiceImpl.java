@@ -34,6 +34,7 @@ public class CardnewsServiceImpl implements CardnewsService {
                         .cardNewsId(cardnews.getId())
                         .cardNewsTitle(cardnews.getTitle())
                         .cardNewsTitle(cardnews.getContent())
+                        .image_url(cardnews.getImageUrl())
                         .build())
                 .toList();
 
@@ -58,6 +59,7 @@ public class CardnewsServiceImpl implements CardnewsService {
                         .cardNewsId(cardnews.getId())
                         .cardNewsTitle(cardnews.getTitle())
                         .cardNewsTitle(cardnews.getContent())
+                        .image_url(cardnews.getImageUrl())
                         .build())
                 .toList();
 
