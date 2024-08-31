@@ -16,56 +16,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
-@Transactional(readOnly = true)
-@RequiredArgsConstructor
-public class EstimateService {
+public interface EstimateService {
+    String FILE_PATH = "/Users/jungheechan/Desktop/estimate.xlsx";
 
-    private final EstimateRepository estimateRepository;
-    public static final String FILE_PATH = "/Users/jungheechan/Desktop/estimate.xlsx";
-
-    @Transactional
-    public void createEstimateService(EstimateServiceRequest estimateServiceRequest) throws IOException {
-        File file = new File(FILE_PATH);
-
-        if (!file.exists()) {
-            throw new IOException("File does not exist");
-        }
-
-        try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(file))) {
-            XSSFSheet sheet = workbook.getSheetAt(0);
-
-            setValue(sheet, "C8", String.valueOf(estimateServiceRequest.getPetInfo()));
-            setValue(sheet, "C9", String.valueOf(estimateServiceRequest.getPetSpecies()));
-            setValue(sheet, "C11", String.valueOf(estimateServiceRequest.getPetAge()));
-
-            try (FileOutputStream fileOut = new FileOutputStream(file)) {
-                workbook.write(fileOut);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw e;
-        }
-
-        saveEstimate(estimateServiceRequest);
-    }
-
-    private void setValue(XSSFSheet sheet, String position, String value) {
-        CellReference ref = new CellReference(position);
-        Row r = sheet.getRow(ref.getRow());
-        if (r != null) {
-            Cell c = r.getCell(ref.getCol());
-            if (c == null) {
-                c = r.createCell(ref.getCol());
-            }
-            c.setCellValue(value);
-        }
-    }
-
-    private void saveEstimate(EstimateServiceRequest estimateServiceRequest) {
-        Estimate estimate = estimateServiceRequest.toEntity(estimateServiceRequest);
-        estimateRepository.save(estimate);
-    }
-
+    void createEstimateService(EstimateServiceRequest estimateServiceRequest) throws IOException;
 }
