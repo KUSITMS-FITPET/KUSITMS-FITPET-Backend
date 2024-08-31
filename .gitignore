@@ -35,4 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Exclude all .yml files in src/main/resources
 src/main/resources/*.yml
