@@ -1,6 +1,7 @@
 package fitpet_be.domain.model;
 
 
+import fitpet_be.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "estimates")
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Estimate {
+public class Estimate extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,9 +49,9 @@ public class Estimate {
 
     @Builder
     public Estimate(String petInfo, String petName,
-                    Long petAge, String petSpecies,
-                    String phoneNumber, String moreInfo,
-                    boolean agreement) {
+        Long petAge, String petSpecies,
+        String phoneNumber, String moreInfo,
+        boolean agreement) {
 
         this.petInfo = petInfo;
         this.petName = petName;
@@ -61,5 +62,6 @@ public class Estimate {
         this.agreement = agreement;
 
     }
+
 
 }

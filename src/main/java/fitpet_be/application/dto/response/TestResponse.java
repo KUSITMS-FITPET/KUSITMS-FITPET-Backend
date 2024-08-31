@@ -1,4 +1,4 @@
-package fitpet_be.application.response;
+package fitpet_be.application.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;

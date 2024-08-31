@@ -1,7 +1,7 @@
 package fitpet_be.application.serviceImpl;
 
-import fitpet_be.application.request.TestServiceRequest;
-import fitpet_be.application.response.TestResponse;
+import fitpet_be.application.dto.request.TestServiceRequest;
+import fitpet_be.application.dto.response.TestResponse;
 import fitpet_be.application.service.TestService;
 import fitpet_be.domain.repository.TestRepository;
 import lombok.RequiredArgsConstructor;
