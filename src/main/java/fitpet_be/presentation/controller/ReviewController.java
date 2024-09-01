@@ -1,5 +1,6 @@
 package fitpet_be.presentation.controller;
 
+import fitpet_be.application.dto.request.ReviewServiceRequest;
 import fitpet_be.application.dto.response.ReviewDetailsResponse;
 import fitpet_be.application.dto.response.ReviewListResponse;
 import fitpet_be.application.service.ReviewService;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,6 +50,13 @@ public class ReviewController {
     public ApiResponse<ReviewDetailsResponse> getReviewDetails(@PathVariable("reviewId") Long reviewId) {
 
         return ApiResponse.onSuccess(reviewService.getReviewDetails(reviewId));
+
+    }
+
+    @PostMapping()
+    public ApiResponse<String> createReview(@RequestBody ReviewServiceRequest reviewServiceRequest){
+
+        return ApiResponse.onSuccess(reviewService.createReview(reviewServiceRequest));
 
     }
 }
