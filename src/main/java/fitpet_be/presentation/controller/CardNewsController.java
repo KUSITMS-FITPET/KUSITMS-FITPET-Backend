@@ -43,7 +43,7 @@ public class CardNewsController {
     public ApiResponse<CardnewsDetailResponse> getCardNewsDetail(
             @PathVariable("cardNewsId") Long cardNewsId) {
 
-        return ApiResponse.onSuccess(cardnewsService.getCardnewsDetail(cardNewsId));
+        return ApiResponse.onSuccess(cardNewsService.getCardnewsDetail(cardNewsId));
 
     }
 

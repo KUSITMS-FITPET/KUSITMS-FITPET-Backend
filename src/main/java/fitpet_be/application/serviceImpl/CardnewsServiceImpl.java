@@ -19,56 +19,56 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class CardnewsServiceImpl implements CardnewsService {
 
-    private final CardnewsRepository cardnewsRepository;
+    private final CardnewsRepository cardNewsRepository;
 
     @Override
     public PageResponse<CardnewsListResponse> getCardnewsListDesc(Pageable pageable) {
 
-        Page<Cardnews> cardnewsList = cardnewsRepository.findAllByOrderByDesc(pageable);
+        Page<Cardnews> cardNewsList = cardNewsRepository.findAllByOrderByDesc(pageable);
 
-        return getCardnewsListResponsePageResponse(cardnewsList);
+        return getCardnewsListResponsePageResponse(cardNewsList);
     }
 
     @Override
     public PageResponse<CardnewsListResponse> getCardnewsListAsc(Pageable pageable) {
 
-        Page<Cardnews> cardnewsList = cardnewsRepository.findAllByOrderByAsc(pageable);
+        Page<Cardnews> cardNewsList = cardNewsRepository.findAllByOrderByAsc(pageable);
 
-        return getCardnewsListResponsePageResponse(cardnewsList);
+        return getCardnewsListResponsePageResponse(cardNewsList);
 
     }
 
     private PageResponse<CardnewsListResponse> getCardnewsListResponsePageResponse(
-        Page<Cardnews> cardnewsList) {
-        List<CardnewsListResponse> cardnewsListResponses = cardnewsList.stream()
-                .map(cardnews -> CardnewsListResponse.builder()
-                        .cardNewsId(cardnews.getId())
-                        .cardNewsTitle(cardnews.getTitle())
-                        .cardNewsTitle(cardnews.getContent())
-                        .image_url(cardnews.getImageUrl())
+        Page<Cardnews> cardNewsList) {
+        List<CardnewsListResponse> cardNewsListResponses = cardNewsList.stream()
+                .map(cardNews -> CardnewsListResponse.builder()
+                        .cardNewsId(cardNews.getId())
+                        .cardNewsTitle(cardNews.getTitle())
+                        .cardNewsTitle(cardNews.getContent())
+                        .image_url(cardNews.getImageUrl())
                         .build())
                 .toList();
 
-        Long totalCount = cardnewsRepository.cardnewsTotalCount();
+        Long totalCount = cardNewsRepository.cardNewsTotalCount();
 
         return PageResponse.<CardnewsListResponse>builder()
-                .listPageResponse(cardnewsListResponses)
+                .listPageResponse(cardNewsListResponses)
                 .totalCount(totalCount)
-                .size(cardnewsListResponses.size())
+                .size(cardNewsListResponses.size())
                 .build();
     }
 
     @Override
     public CardnewsDetailResponse getCardnewsDetail(Long cardNewsId) {
 
-        Cardnews cardnews = cardnewsRepository.findById(cardNewsId)
+        Cardnews cardNews = cardNewsRepository.findById(cardNewsId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카드뉴스입니다."));
 
         return CardnewsDetailResponse.builder()
-                .cardNewsId(cardnews.getId())
-                .cardNewsTitle(cardnews.getTitle())
-                .cardNewsContent((cardnews.getContent()))
-                .image_url(cardnews.getImageUrl())
+                .cardNewsId(cardNews.getId())
+                .cardNewsTitle(cardNews.getTitle())
+                .cardNewsContent((cardNews.getContent()))
+                .image_url(cardNews.getImageUrl())
                 .build();
 
     }
