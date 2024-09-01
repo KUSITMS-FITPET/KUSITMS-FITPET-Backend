@@ -35,15 +35,19 @@ public class Review extends BaseTimeEntity {
     @Column(name = "review_content", nullable = false)
     private String content;
 
+    @Column(name = "review_start", nullable = false)
+    private Integer star;
+
     @Builder
     public Review(
             String petInfo, Long petAge,
-            String petSpecies, String content) {
+            String petSpecies, String content, Integer star) {
 
         this.petInfo = petInfo;
         this.petAge = petAge;
         this.petSpecies = petSpecies;
         this.content = content;
+        this.star = star;
 
     }
 
