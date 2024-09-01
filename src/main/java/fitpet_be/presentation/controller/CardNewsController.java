@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/cardnews")
+@RequestMapping("/api/v1/cardNews")
 public class CardNewsController {
 
-    private final CardnewsService cardnewsService;
+    private final CardnewsService cardNewsService;
 
     @GetMapping("/desc")
     public ApiResponse<PageResponse<CardnewsListResponse>> getCardNewsDesc(
@@ -23,7 +23,7 @@ public class CardNewsController {
 
         Pageable pageable = PageRequest.of(page -1, size);
 
-        return ApiResponse.onSuccess(cardnewsService.getCardnewsListDesc(pageable));
+        return ApiResponse.onSuccess(cardNewsService.getCardnewsListDesc(pageable));
 
     }
 
@@ -34,7 +34,7 @@ public class CardNewsController {
 
         Pageable pageable = PageRequest.of(page -1, size);
 
-        return ApiResponse.onSuccess(cardnewsService.getCardnewsListAsc(pageable));
+        return ApiResponse.onSuccess(cardNewsService.getCardnewsListAsc(pageable));
 
     }
 

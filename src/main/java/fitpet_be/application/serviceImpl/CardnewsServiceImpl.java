@@ -35,7 +35,7 @@ public class CardnewsServiceImpl implements CardnewsService {
                         .build())
                 .toList();
 
-        Long totalCount = cardnewsRepository.cardnewsTotalCount();
+        Long totalCount = cardnewsRepository.cardNewsTotalCount();
 
 
         return PageResponse.<CardnewsListResponse>builder()
@@ -59,7 +59,7 @@ public class CardnewsServiceImpl implements CardnewsService {
                         .build())
                 .toList();
 
-        Long totalCount = cardnewsRepository.cardnewsTotalCount();
+        Long totalCount = cardnewsRepository.cardNewsTotalCount();
 
 
         return PageResponse.<CardnewsListResponse>builder()

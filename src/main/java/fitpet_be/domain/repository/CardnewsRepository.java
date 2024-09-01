@@ -17,6 +17,6 @@ public interface CardnewsRepository extends JpaCardnewsRepository {
 
 
     @Query("SELECT count(c) FROM Cardnews c")
-    Long cardnewsTotalCount();
+    Long cardNewsTotalCount();
 
 }
