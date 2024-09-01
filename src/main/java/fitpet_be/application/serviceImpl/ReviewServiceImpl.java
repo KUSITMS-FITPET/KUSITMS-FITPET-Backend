@@ -1,7 +1,10 @@
 package fitpet_be.application.serviceImpl;
 
+import fitpet_be.application.dto.response.ReviewDetailsResponse;
 import fitpet_be.application.dto.response.ReviewListResponse;
+import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.ReviewService;
+import fitpet_be.common.ErrorStatus;
 import fitpet_be.common.PageResponse;
 import fitpet_be.domain.model.Review;
 import fitpet_be.domain.repository.ReviewRepository;
@@ -54,4 +57,27 @@ public class ReviewServiceImpl implements ReviewService {
             .build();
     }
 
+    @Override
+    public ReviewDetailsResponse getReviewDetails(Long reviewId) {
+        Review review = getReview(reviewId);
+
+
+        return ReviewDetailsResponse.builder()
+            .petSpecies(review.getPetSpecies())
+            .petInfo(review.getPetInfo())
+            .petAge(review.getPetAge())
+            .star(review.getStar())
+            .content(review.getContent())
+            .localDateTime(review.getCreatedAt())
+            .build();
+
+    }
+
+    private Review getReview(Long reviewId) {
+
+        return reviewRepository.findById(reviewId).orElseThrow(
+            () -> new ApiException(ErrorStatus._REVEIEW_NOT_FOUND)
+        );
+
+    }
 }

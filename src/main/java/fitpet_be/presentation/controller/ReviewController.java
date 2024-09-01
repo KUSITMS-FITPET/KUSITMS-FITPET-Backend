@@ -1,13 +1,16 @@
 package fitpet_be.presentation.controller;
 
+import fitpet_be.application.dto.response.ReviewDetailsResponse;
 import fitpet_be.application.dto.response.ReviewListResponse;
 import fitpet_be.application.service.ReviewService;
 import fitpet_be.common.ApiResponse;
 import fitpet_be.common.PageResponse;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,6 +40,13 @@ public class ReviewController {
         Pageable pageable = PageRequest.of(page -1, size);
 
         return ApiResponse.onSuccess(reviewService.getReviewListAsc(pageable));
+
+    }
+
+    @GetMapping("/{reviewId}")
+    public ApiResponse<ReviewDetailsResponse> getReviewDetails(@PathVariable("reviewId") Long reviewId) {
+
+        return ApiResponse.onSuccess(reviewService.getReviewDetails(reviewId));
 
     }
 }
