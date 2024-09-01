@@ -2,7 +2,9 @@ package fitpet_be.application.serviceImpl;
 
 import fitpet_be.application.dto.response.CardnewsDetailResponse;
 import fitpet_be.application.dto.response.CardnewsListResponse;
+import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.CardnewsService;
+import fitpet_be.common.ErrorStatus;
 import fitpet_be.common.PageResponse;
 import fitpet_be.domain.model.Cardnews;
 import fitpet_be.domain.repository.CardnewsRepository;
@@ -42,7 +44,7 @@ public class CardnewsServiceImpl implements CardnewsService {
     public CardnewsDetailResponse getCardnewsDetail(Long cardNewsId) {
 
         Cardnews cardNews = cardNewsRepository.findById(cardNewsId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카드뉴스입니다."));
+                .orElseThrow(() -> new ApiException(ErrorStatus._CARDNEWS_NOT_FOUND));
 
         return CardnewsDetailResponse.builder()
                 .cardNewsId(cardNews.getId())
