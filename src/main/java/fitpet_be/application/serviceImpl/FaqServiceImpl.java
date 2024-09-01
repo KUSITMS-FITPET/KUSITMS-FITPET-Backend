@@ -1,10 +1,9 @@
 package fitpet_be.application.serviceImpl;
 
-import fitpet_be.application.dto.response.CardnewsListResponse;
+import fitpet_be.application.dto.request.FaqListSearchRequest;
 import fitpet_be.application.dto.response.FaqListResponse;
 import fitpet_be.application.service.FaqService;
 import fitpet_be.common.PageResponse;
-import fitpet_be.domain.model.Cardnews;
 import fitpet_be.domain.model.Faq;
 import fitpet_be.domain.repository.FaqRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +25,25 @@ public class FaqServiceImpl implements FaqService {
     public PageResponse<FaqListResponse> getFaqList(Long category, Pageable pageable) {
 
         Page<Faq> faqs = faqRepository.findAllByCategory(category, pageable);
+        
+        Long totalCount = faqRepository.faqTotalCountByCategory(category);
+
+        return getFaqListPageResponse(faqs, totalCount);
+
+    }
+
+    @Override
+    public PageResponse<FaqListResponse> getFaqListSearch(FaqListSearchRequest request, Pageable pageable) {
+
+        Page<Faq> faqs = faqRepository.searchAllByKeywordAndCategory(request.getKeyword(), request.getCategory(), pageable);
+
+        Long totalCount = faqRepository.faqTotalCountByCategory(request.getCategory());
+
+        return getFaqListPageResponse(faqs, totalCount);
+
+    }
+
+    private PageResponse<FaqListResponse> getFaqListPageResponse(Page<Faq> faqs, Long totalCount) {
 
         List<FaqListResponse> faqListResponses = faqs.stream()
                 .map(faq -> FaqListResponse.builder()
@@ -34,9 +52,7 @@ public class FaqServiceImpl implements FaqService {
                         .answer(faq.getAnswer())
                         .build())
                 .toList();
-        
-        Long totalCount = faqRepository.faqTotalCount();
-        
+
         return PageResponse.<FaqListResponse>builder()
                 .listPageResponse(faqListResponses)
                 .totalCount(totalCount)
@@ -44,6 +60,5 @@ public class FaqServiceImpl implements FaqService {
                 .build();
 
     }
-
     
 }

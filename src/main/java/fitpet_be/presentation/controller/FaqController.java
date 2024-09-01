@@ -1,5 +1,6 @@
 package fitpet_be.presentation.controller;
 
+import fitpet_be.application.dto.request.FaqListSearchRequest;
 import fitpet_be.application.dto.response.FaqListResponse;
 import fitpet_be.application.service.FaqService;
 import fitpet_be.common.ApiResponse;
@@ -8,9 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -28,6 +27,18 @@ public class FaqController {
         Pageable pageable = PageRequest.of(page -1, size);
 
         return ApiResponse.onSuccess(faqService.getFaqList(category, pageable));
+
+    }
+
+    @PostMapping("/search")
+    public ApiResponse<PageResponse<FaqListResponse>> getFaqListSearch(
+            @RequestParam("page") int page,
+            @RequestParam(value = "size", defaultValue = "9") int size,
+            @RequestBody FaqListSearchRequest request) {
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        return ApiResponse.onSuccess(faqService.getFaqListSearch(request, pageable));
 
     }
 
