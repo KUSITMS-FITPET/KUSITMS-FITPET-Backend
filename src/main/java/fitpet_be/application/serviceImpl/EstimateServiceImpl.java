@@ -1,7 +1,10 @@
 package fitpet_be.application.serviceImpl;
 
+import fitpet_be.application.dto.request.EstimateExportRequest;
 import fitpet_be.application.dto.request.EstimateServiceRequest;
+import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.EstimateService;
+import fitpet_be.common.ErrorStatus;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
@@ -9,6 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -60,6 +64,23 @@ public class EstimateServiceImpl implements EstimateService {
         saveEstimate(estimateServiceRequest);
     }
 
+    @Override
+    public void exportEstimateService(EstimateExportRequest estimateExportRequest)
+        throws IOException {
+
+        String fileName = "exportEstimate.xlsx";
+        File excelFile = s3Service.downloadExcel(fileName);
+
+        List<Long> ids = estimateExportRequest.getIds();
+
+        for (Long id : ids) {
+            Estimate estimate = estimateRepository.findById(id).orElseThrow(
+                () -> new ApiException(ErrorStatus._ESTIMATE_NOT_FOUND)
+            );
+            // Estimate로 견적서에 값 입력하기
+
+        }
+    }
 
 
     private void setSheet(XSSFWorkbook workbook, int setSheet, EstimateServiceRequest estimateServiceRequest){
