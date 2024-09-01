@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,23 +26,7 @@ public class CardnewsServiceImpl implements CardnewsService {
 
         Page<Cardnews> cardnewsList = cardnewsRepository.findAllByOrderByDesc(pageable);
 
-        List<CardnewsListResponse> cardnewsListResponses = cardnewsList.stream()
-                .map(cardnews -> CardnewsListResponse.builder()
-                        .cardNewsId(cardnews.getId())
-                        .cardNewsTitle(cardnews.getTitle())
-                        .cardNewsTitle(cardnews.getContent())
-                        .image_url(cardnews.getImageUrl())
-                        .build())
-                .toList();
-
-        Long totalCount = cardnewsRepository.cardnewsTotalCount();
-
-
-        return PageResponse.<CardnewsListResponse>builder()
-                .listPageResponse(cardnewsListResponses)
-                .totalCount(totalCount)
-                .size(cardnewsListResponses.size())
-                .build();
+        return getCardnewsListResponsePageResponse(cardnewsList);
     }
 
     @Override
@@ -51,6 +34,12 @@ public class CardnewsServiceImpl implements CardnewsService {
 
         Page<Cardnews> cardnewsList = cardnewsRepository.findAllByOrderByAsc(pageable);
 
+        return getCardnewsListResponsePageResponse(cardnewsList);
+
+    }
+
+    private PageResponse<CardnewsListResponse> getCardnewsListResponsePageResponse(
+        Page<Cardnews> cardnewsList) {
         List<CardnewsListResponse> cardnewsListResponses = cardnewsList.stream()
                 .map(cardnews -> CardnewsListResponse.builder()
                         .cardNewsId(cardnews.getId())
@@ -62,13 +51,11 @@ public class CardnewsServiceImpl implements CardnewsService {
 
         Long totalCount = cardnewsRepository.cardnewsTotalCount();
 
-
         return PageResponse.<CardnewsListResponse>builder()
                 .listPageResponse(cardnewsListResponses)
                 .totalCount(totalCount)
                 .size(cardnewsListResponses.size())
                 .build();
-
     }
 
     @Override
