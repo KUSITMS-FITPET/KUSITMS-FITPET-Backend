@@ -1,5 +1,6 @@
 package fitpet_be.presentation.controller;
 
+import fitpet_be.application.dto.response.CardnewsDetailResponse;
 import fitpet_be.application.dto.response.CardnewsListResponse;
 import fitpet_be.application.service.CardnewsService;
 import fitpet_be.common.ApiResponse;
@@ -35,6 +36,14 @@ public class CardNewsController {
         Pageable pageable = PageRequest.of(page -1, size);
 
         return ApiResponse.onSuccess(cardNewsService.getCardnewsListAsc(pageable));
+
+    }
+
+    @GetMapping("/{cardNewsId}")
+    public ApiResponse<CardnewsDetailResponse> getCardNewsDetail(
+            @PathVariable("cardNewsId") Long cardNewsId) {
+
+        return ApiResponse.onSuccess(cardnewsService.getCardnewsDetail(cardNewsId));
 
     }
 
