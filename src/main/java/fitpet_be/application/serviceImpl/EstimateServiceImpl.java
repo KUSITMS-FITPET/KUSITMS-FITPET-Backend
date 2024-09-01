@@ -4,6 +4,7 @@ import fitpet_be.application.dto.request.EstimateServiceRequest;
 import fitpet_be.application.service.EstimateService;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
+import fitpet_be.infrastructure.s3.S3Service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -23,33 +24,43 @@ import org.springframework.transaction.annotation.Transactional;
 public class EstimateServiceImpl implements EstimateService {
 
     private final EstimateRepository estimateRepository;
+    private final S3Service s3Service;
 
     @Override
     @Transactional
     public void createEstimateService(EstimateServiceRequest estimateServiceRequest) throws IOException {
-        File file = new File(FILE_PATH);
 
-        if (!file.exists()) {
+        String fileName = "estimate.xlsx";
+        File excelFile = s3Service.downloadExcel(fileName);
+
+        if (!excelFile.exists()) {
             throw new IOException("File does not exist");
         }
 
-        try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(file))) {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(excelFile))) {
 
             setSheet(workbook, 0, estimateServiceRequest);
             setSheet(workbook, 1, estimateServiceRequest);
             setSheet(workbook, 2, estimateServiceRequest);
 
-            try (FileOutputStream fileOut = new FileOutputStream(file)) {
+            try (FileOutputStream fileOut = new FileOutputStream(excelFile)) {
                 workbook.write(fileOut);
             }
 
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
+        } finally {
+            // 로컬 임시 파일 삭제
+            if (excelFile.exists()) {
+                excelFile.delete();
+            }
         }
 
         saveEstimate(estimateServiceRequest);
     }
+
+
 
     private void setSheet(XSSFWorkbook workbook, int setSheet, EstimateServiceRequest estimateServiceRequest){
         XSSFSheet sheet = workbook.getSheetAt(setSheet);
