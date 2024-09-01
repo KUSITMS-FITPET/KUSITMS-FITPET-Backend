@@ -1,5 +1,6 @@
 package fitpet_be.application.serviceImpl;
 
+import fitpet_be.application.dto.request.ReviewServiceRequest;
 import fitpet_be.application.dto.response.ReviewDetailsResponse;
 import fitpet_be.application.dto.response.ReviewListResponse;
 import fitpet_be.application.exception.ApiException;
@@ -71,6 +72,22 @@ public class ReviewServiceImpl implements ReviewService {
             .localDateTime(review.getCreatedAt())
             .build();
 
+    }
+
+    @Override
+    public String createReview(ReviewServiceRequest reviewServiceRequest) {
+
+        Review review = Review.builder()
+            .petInfo(reviewServiceRequest.getPetInfo())
+            .petAge(reviewServiceRequest.getPetAge())
+            .petSpecies(reviewServiceRequest.getPetSpecies())
+            .content(reviewServiceRequest.getContent())
+            .star(reviewServiceRequest.getStar())
+            .build();
+
+        reviewRepository.save(review);
+
+        return "리뷰가 정상적으로 등록되었습니다";
     }
 
     private Review getReview(Long reviewId) {
