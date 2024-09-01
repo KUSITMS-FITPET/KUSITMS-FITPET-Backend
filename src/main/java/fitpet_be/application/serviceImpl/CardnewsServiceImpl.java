@@ -38,8 +38,23 @@ public class CardnewsServiceImpl implements CardnewsService {
 
     }
 
+    @Override
+    public CardnewsDetailResponse getCardnewsDetail(Long cardNewsId) {
+
+        Cardnews cardNews = cardNewsRepository.findById(cardNewsId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카드뉴스입니다."));
+
+        return CardnewsDetailResponse.builder()
+                .cardNewsId(cardNews.getId())
+                .cardNewsTitle(cardNews.getTitle())
+                .cardNewsContent((cardNews.getContent()))
+                .image_url(cardNews.getImageUrl())
+                .build();
+
+    }
+
     private PageResponse<CardnewsListResponse> getCardnewsListResponsePageResponse(
-        Page<Cardnews> cardNewsList) {
+            Page<Cardnews> cardNewsList) {
         List<CardnewsListResponse> cardNewsListResponses = cardNewsList.stream()
                 .map(cardNews -> CardnewsListResponse.builder()
                         .cardNewsId(cardNews.getId())
@@ -56,21 +71,6 @@ public class CardnewsServiceImpl implements CardnewsService {
                 .totalCount(totalCount)
                 .size(cardNewsListResponses.size())
                 .build();
-    }
-
-    @Override
-    public CardnewsDetailResponse getCardnewsDetail(Long cardNewsId) {
-
-        Cardnews cardNews = cardNewsRepository.findById(cardNewsId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카드뉴스입니다."));
-
-        return CardnewsDetailResponse.builder()
-                .cardNewsId(cardNews.getId())
-                .cardNewsTitle(cardNews.getTitle())
-                .cardNewsContent((cardNews.getContent()))
-                .image_url(cardNews.getImageUrl())
-                .build();
-
     }
 
 }

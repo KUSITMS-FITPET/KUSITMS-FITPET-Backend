@@ -26,18 +26,18 @@ public class Faq extends BaseTimeEntity {
     @Column(name = "faq_category", nullable = false)
     private Long category;
 
-    @Column(name = "faq_title", nullable = false)
-    private String title;
+    @Column(name = "faq_question", nullable = false)
+    private String question;
 
-    @Column(name = "faq_content", nullable = false)
-    private String content;
+    @Column(name = "faq_answer", nullable = false)
+    private String answer;
 
     @Builder
-    public Faq(Long category, String title, String content) {
+    public Faq(Long category, String question, String answer) {
 
         this.category = category;
-        this.title = title;
-        this.content = content;
+        this.question = question;
+        this.answer = answer;
 
     }
 
