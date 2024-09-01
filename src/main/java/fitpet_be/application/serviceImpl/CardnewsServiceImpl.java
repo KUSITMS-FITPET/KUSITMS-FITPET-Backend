@@ -1,5 +1,6 @@
 package fitpet_be.application.serviceImpl;
 
+import fitpet_be.application.dto.response.CardnewsDetailResponse;
 import fitpet_be.application.dto.response.CardnewsListResponse;
 import fitpet_be.application.service.CardnewsService;
 import fitpet_be.common.PageResponse;
@@ -66,6 +67,21 @@ public class CardnewsServiceImpl implements CardnewsService {
                 .listPageResponse(cardnewsListResponses)
                 .totalCount(totalCount)
                 .size(cardnewsListResponses.size())
+                .build();
+
+    }
+
+    @Override
+    public CardnewsDetailResponse getCardnewsDetail(Long cardNewsId) {
+
+        Cardnews cardnews = cardnewsRepository.findById(cardNewsId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카드뉴스입니다."));
+
+        return CardnewsDetailResponse.builder()
+                .cardNewsId(cardnews.getId())
+                .cardNewsTitle(cardnews.getTitle())
+                .cardNewsContent((cardnews.getContent()))
+                .image_url(cardnews.getImageUrl())
                 .build();
 
     }
