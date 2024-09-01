@@ -1,6 +1,5 @@
 package fitpet_be.application.serviceImpl;
 
-import fitpet_be.application.dto.request.CardnewsListRequest;
 import fitpet_be.application.dto.response.CardnewsListResponse;
 import fitpet_be.application.service.CardnewsService;
 import fitpet_be.common.PageResponse;
@@ -8,7 +7,6 @@ import fitpet_be.domain.model.Cardnews;
 import fitpet_be.domain.repository.CardnewsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,9 +22,8 @@ public class CardnewsServiceImpl implements CardnewsService {
     private final CardnewsRepository cardnewsRepository;
 
     @Override
-    public PageResponse<CardnewsListResponse> getCardnewsListDesc(CardnewsListRequest request) {
+    public PageResponse<CardnewsListResponse> getCardnewsListDesc(Pageable pageable) {
 
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize());
         Page<Cardnews> cardnewsList = cardnewsRepository.findAllByOrderByDesc(pageable);
 
         List<CardnewsListResponse> cardnewsListResponses = cardnewsList.stream()
@@ -49,9 +46,8 @@ public class CardnewsServiceImpl implements CardnewsService {
     }
 
     @Override
-    public PageResponse<CardnewsListResponse> getCardnewsListAsc(CardnewsListRequest request) {
+    public PageResponse<CardnewsListResponse> getCardnewsListAsc(Pageable pageable) {
 
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize());
         Page<Cardnews> cardnewsList = cardnewsRepository.findAllByOrderByAsc(pageable);
 
         List<CardnewsListResponse> cardnewsListResponses = cardnewsList.stream()
