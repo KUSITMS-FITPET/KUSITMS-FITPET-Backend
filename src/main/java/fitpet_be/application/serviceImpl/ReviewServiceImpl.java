@@ -75,6 +75,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional
     public String createReview(ReviewServiceRequest reviewServiceRequest) {
 
         Review review = Review.builder()
