@@ -1,10 +1,14 @@
 package fitpet_be.application.serviceImpl;
 import fitpet_be.application.dto.EstimateUploadDto;
 import fitpet_be.application.dto.request.EstimateServiceRequest;
+import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.EstimateService;
+import fitpet_be.common.ErrorStatus;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
+import java.net.URL;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -36,6 +40,48 @@ public class EstimateServiceImpl implements EstimateService {
     public void createEstimateService(EstimateServiceRequest estimateServiceRequest) throws IOException {
         Estimate saveEstimate = saveEstimate(estimateServiceRequest);
         uploadEstimate(saveEstimate);
+    }
+
+    @Override
+    public void downloadEstimate(Long estimateId) {
+        Estimate estimate = estimateRepository.findById(estimateId).orElseThrow(
+            () -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND)
+        );
+
+        String fileUrl = estimate.getUrl();
+        File tempFile = null;
+
+        try {
+            URL url = new URL(fileUrl);
+
+            tempFile = File.createTempFile("estimate-", ".xlsx");
+
+            try (InputStream in = url.openStream();
+                FileOutputStream out = new FileOutputStream(tempFile)) {
+
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+
+
+                // 견적서 추출 로직
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new ApiException(ErrorStatus._FILE_DOWNLOAD_FAILED);
+        } finally {
+            // 작업 완료 후 파일 삭제
+            if (tempFile != null && tempFile.exists()) {
+                if (tempFile.delete()) {
+                    System.out.println("Temporary file deleted successfully.");
+                } else {
+                    System.err.println("Failed to delete the temporary file.");
+                }
+            }
+        }
     }
 
     @Transactional
