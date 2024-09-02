@@ -61,7 +61,7 @@ public class CardnewsServiceImpl implements CardnewsService {
                 .map(cardNews -> CardnewsListResponse.builder()
                         .cardNewsId(cardNews.getId())
                         .cardNewsTitle(cardNews.getTitle())
-                        .cardNewsTitle(cardNews.getContent())
+                        .cardNewsContent(cardNews.getContent())
                         .image_url(cardNews.getImageUrl())
                         .build())
                 .toList();
