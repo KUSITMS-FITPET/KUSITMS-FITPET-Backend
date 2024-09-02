@@ -8,7 +8,6 @@ import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
 import java.net.URL;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -110,7 +109,8 @@ public class EstimateServiceImpl implements EstimateService {
                 .file(modifiedFile)
                 .build();
 
-        s3Service.uploadEstimate(estimateUploadDto);
+        String fileUrl = s3Service.uploadEstimate(estimateUploadDto);
+        estimate.setUrl(fileUrl);
     }
 
     private void setSheet(XSSFWorkbook workbook, int setSheet, Estimate estimate) {
