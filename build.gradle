@@ -49,6 +49,9 @@ dependencies {
 	implementation 'jakarta.validation:jakarta.validation-api:3.0.0'
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
+    implementation 'mysql:mysql-connector-java:8.0.29'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
 }
 
 tasks.named('test') {
@@ -62,5 +65,5 @@ tasks.named('asciidoctor') {
 }
 
 jar {
-	enabled = false
+    enabled = false
 }
