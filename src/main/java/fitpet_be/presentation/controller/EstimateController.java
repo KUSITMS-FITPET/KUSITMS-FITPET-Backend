@@ -6,14 +6,11 @@ import fitpet_be.common.ApiResponse;
 import fitpet_be.infrastructure.s3.S3Service;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/estimates")
@@ -25,8 +22,17 @@ public class EstimateController {
     @PostMapping()
     public ApiResponse<String> createEstimate(@RequestBody EstimateServiceRequest estimateServiceRequest)
         throws IOException {
+
         estimateService.createEstimateService(estimateServiceRequest);
+
         return ApiResponse.onSuccess("견적서가 성공적으로 생성 되었습니다.");
+
+    }
+
+    @PostMapping("/{estimateId}")
+    public ApiResponse<String> downloadEstimate(@RequestParam Long estimateId) {
+        estimateService.downloadEstimate(estimateId);
+        return ApiResponse.onSuccess("견적서가 다운로드 되었습니다.");
     }
 
 }

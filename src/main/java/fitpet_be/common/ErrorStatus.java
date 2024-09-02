@@ -16,7 +16,11 @@ public enum ErrorStatus implements BaseErrorCode {
     _UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMON401", "인증되지 않은 요청입니다."),
     _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "접근 권한이 없습니다."),
     _REVEIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW404", "해당 리뷰를 찾을 수 없습니다."),
-    _CARDNEWS_NOT_FOUND(HttpStatus.NOT_FOUND, "CARDNEWS404", "해당 카드뉴스를 찾을 수 없습니다.");
+    _CARDNEWS_NOT_FOUND(HttpStatus.NOT_FOUND, "CARDNEWS404", "해당 카드뉴스를 찾을 수 없습니다."),
+    _ESTIMATES_NOT_FOUND(HttpStatus.NOT_FOUND, "ESTIMATES404", "해당 견적서를 찾을 수 없습니다."),
+    _FILE_DOWNLOAD_FAILED(HttpStatus.BAD_REQUEST, "FILE404", "파일을 다운받을 수 없습니다.");
+
+
 
     private final HttpStatus httpStatus;
     private final String code;
