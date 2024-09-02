@@ -38,10 +38,11 @@ public class S3Service {
     }
 
     // 견적서 업로드
-    public void uploadEstimate(EstimateUploadDto estimateUploadDto) throws IOException {
+    public String uploadEstimate(EstimateUploadDto estimateUploadDto) throws IOException {
         String fileName = createFileName(estimateUploadDto);
-        File file = estimateUploadDto.getFile(); // DTO에서 File 객체를 가져옴
-        uploadToS3(file, ESTIMATES_FOLDER, fileName);
+        File file = estimateUploadDto.getFile(); //
+
+        return uploadToS3(file, ESTIMATES_FOLDER, fileName);
     }
 
     // S3에서 파일 다운로드 후 File로 변환
@@ -60,13 +61,16 @@ public class S3Service {
     }
 
     // S3에 File 객체를 업로드
-    private void uploadToS3(File file, String folder, String fileName) {
+    private String uploadToS3(File file, String folder, String fileName) {
         try (InputStream inputStream = new FileInputStream(file)) {
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentLength(file.length());
             objectMetadata.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
             amazonS3Client.putObject(new PutObjectRequest(bucket, folder + fileName, inputStream, objectMetadata));
+
+            return amazonS3Client.getUrl(bucket, folder + fileName).toString();
+
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.");
         }
