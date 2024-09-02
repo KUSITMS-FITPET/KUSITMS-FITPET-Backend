@@ -49,8 +49,14 @@ dependencies {
 	implementation 'jakarta.validation:jakarta.validation-api:3.0.0'
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
+
+	// swagger
+	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.2.0'
+
+
     implementation 'mysql:mysql-connector-java:8.0.29'
     runtimeOnly 'com.mysql:mysql-connector-j'
+
 
 }
 
