@@ -5,6 +5,8 @@ import fitpet_be.application.dto.response.CardnewsListResponse;
 import fitpet_be.application.service.CardnewsService;
 import fitpet_be.common.ApiResponse;
 import fitpet_be.common.PageResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +19,7 @@ public class CardNewsController {
 
     private final CardnewsService cardNewsService;
 
+    @Operation(summary = "카드뉴스 조회", description = "카드 뉴스를 최신순으로 조회합니다")
     @GetMapping("/desc")
     public ApiResponse<PageResponse<CardnewsListResponse>> getCardNewsDesc(
             @RequestParam("page") int page,
@@ -29,6 +32,7 @@ public class CardNewsController {
     }
 
     @GetMapping("/asc")
+    @Operation(summary = "카드뉴스 조회", description = "카드 뉴스를 오래된 순으로 조회합니다")
     public ApiResponse<PageResponse<CardnewsListResponse>> getCardNewsAsc(
             @RequestParam("page") int page,
             @RequestParam(value = "size", defaultValue = "9") int size) {
@@ -39,6 +43,8 @@ public class CardNewsController {
 
     }
 
+    @Operation(summary = "카드뉴스 상세페이지 조회", description = "특정 카드뉴스의 상세페이지를 조회합니다")
+    @Parameter(name = "cardNewsId", description = "카드뉴스 ID", required = true, example = "1")
     @GetMapping("/{cardNewsId}")
     public ApiResponse<CardnewsDetailResponse> getCardNewsDetail(
             @PathVariable("cardNewsId") Long cardNewsId) {
