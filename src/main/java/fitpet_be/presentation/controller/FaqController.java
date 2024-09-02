@@ -30,7 +30,7 @@ public class FaqController {
 
     }
 
-    @PostMapping("/search")
+    @GetMapping("/search")
     public ApiResponse<PageResponse<FaqListResponse>> getFaqListSearch(
             @RequestParam("page") int page,
             @RequestParam(value = "size", defaultValue = "9") int size,
