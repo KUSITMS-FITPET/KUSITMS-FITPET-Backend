@@ -3,20 +3,16 @@ package fitpet_be.domain.model;
 import fitpet_be.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.apache.xpath.operations.Bool;
 
 @Entity
 @Getter
-@Table(name = "admin")
+@Table(name = "admins")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Admin extends BaseTimeEntity {
 
@@ -55,4 +51,6 @@ public class Admin extends BaseTimeEntity {
         this.roleSites = roleSites;
         this.roleMaster = roleMaster;
     }
+
+
 }
