@@ -1,10 +1,6 @@
 package fitpet_be.infrastructure.jwt;
 
 import static fitpet_be.infrastructure.utils.JwtProperties.ADMIN_ID;
-import static fitpet_be.infrastructure.utils.JwtProperties.ROLE_CONTENTS;
-import static fitpet_be.infrastructure.utils.JwtProperties.ROLE_ESTIMATES;
-import static fitpet_be.infrastructure.utils.JwtProperties.ROLE_SITES;
-
 import fitpet_be.application.exception.ApiException;
 import fitpet_be.common.ErrorStatus;
 import io.jsonwebtoken.Claims;
@@ -19,10 +15,8 @@ import java.security.Key;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -46,7 +40,7 @@ public class JwtProvider {
      * JWT header "alg" : "HS512" payload "id" : "employeeId" payload "auth" : "EMPLOYEE/ADMIN"
      * payload "iat" : "123456789" payload "exp" : "123456789"
      */
-    public String generateAccessToken(String adminId, Boolean roleContents, Boolean roleEstimates, Boolean roleSites) {
+    public String generateAccessToken(String adminId, Boolean roleContents, Boolean roleEstimates, Boolean roleSites, Boolean roleMaster) {
 
         Date expiredAt = new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRE_TIME);
 
@@ -55,6 +49,7 @@ public class JwtProvider {
             .claim("ROLE_CONTENTS", roleContents)  // boolean 값
             .claim("ROLE_ESTIMATES", roleEstimates)  // boolean 값
             .claim("ROLE_SITES", roleSites)  // boolean 값
+            .claim("ROLE_MASTER", roleMaster)  // boolean 값
             .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
             .setExpiration(expiredAt)
             .signWith(key, SignatureAlgorithm.HS256)

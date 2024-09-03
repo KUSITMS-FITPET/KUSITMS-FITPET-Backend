@@ -1,6 +1,5 @@
 package fitpet_be.application.serviceImpl;
 
-import ch.qos.logback.core.subst.Token;
 import fitpet_be.application.dto.request.AdminLoginRequest;
 import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.AdminService;
@@ -38,6 +37,6 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public String generateATAndRT(Admin admin) {
 
-        return jwtProvider.generateAccessToken(admin.getId(), admin.getRoleContents(), admin.getRoleEstimates(), admin.getRoleSites());
+        return jwtProvider.generateAccessToken(admin.getId(), admin.getRoleContents(), admin.getRoleEstimates(), admin.getRoleSites(), admin.getRoleMaster());
     }
 }
