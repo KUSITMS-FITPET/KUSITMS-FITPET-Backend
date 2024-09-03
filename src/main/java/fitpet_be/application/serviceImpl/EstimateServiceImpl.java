@@ -1,5 +1,6 @@
 package fitpet_be.application.serviceImpl;
 import fitpet_be.application.dto.EstimateUploadDto;
+import fitpet_be.application.dto.HistoryExportInfoDto;
 import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.application.dto.request.EstimateServiceRequest;
 import fitpet_be.application.dto.request.EstimateUpdateRequest;
@@ -20,9 +21,13 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -41,7 +46,8 @@ public class EstimateServiceImpl implements EstimateService {
 
     private static final String EXCEL_FOLDER = "excels/";
     private static final String ORIGINAL_FILE_KEY = EXCEL_FOLDER + "OriginalSCFile.xlsx";
-    private static final String ORIGINAL_OUTPUT_FILE_KEY = EXCEL_FOLDER + "OriginalSCOutputFile.xlsx";
+
+    public static final String ORIGINAL_EXPORT_FILE_KEY = EXCEL_FOLDER + "OriginalSCExportFile.xlsx";
 
     private final EstimateRepository estimateRepository;
     private final S3Service s3Service;
@@ -185,6 +191,59 @@ public class EstimateServiceImpl implements EstimateService {
         } catch (IOException e) {
             e.printStackTrace();
             throw new ApiException(ErrorStatus._ESTIMATE_UPLOAD_FAILED);
+        }
+
+    }
+
+    // 견적서 히스토리 추출
+    @Override
+    public Resource exportHistory(File file, List<HistoryExportInfoDto> exportInfos) {
+
+
+        try (Workbook workbook = new XSSFWorkbook(file)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            int rowIndex = 1;
+
+            for (HistoryExportInfoDto info : exportInfos) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null) {
+
+                    row = sheet.createRow(rowIndex);
+
+                }
+
+                row.createCell(0).setCellValue(rowIndex - 1);
+                row.createCell(1).setCellValue(info.getIp());
+                row.createCell(2).setCellValue(info.getRefeere());
+                row.createCell(3).setCellValue(info.getCreatedAt());
+                row.createCell(4).setCellValue(info.getPetInfo());
+                row.createCell(5).setCellValue(info.getPetName());
+                row.createCell(9).setCellValue(info.getPetAge());
+                row.createCell(6).setCellValue(info.getPetSpecies());
+                row.createCell(7).setCellValue(info.getMoreInfo());
+                row.createCell(8).setCellValue(info.getPhoneNumber());
+                rowIndex++;
+
+            }
+
+            // 파일을 저장할 위치를 시스템의 기본 임시 디렉토리로 설정
+            String tempDir = System.getProperty("java.io.tmpdir");
+            File outputFile = new File(tempDir + "/modified-" + file.getName());
+
+            try (FileOutputStream outputStream = new FileOutputStream(outputFile)) {
+                workbook.write(outputStream);
+            } finally {
+                workbook.close();
+            }
+
+            return new FileSystemResource(outputFile);
+
+        } catch(Exception e) {
+            System.out.println("다운로드 실패 " + e);
+            throw new ApiException(ErrorStatus._FILE_DOWNLOAD_FAILED);
+
         }
 
     }

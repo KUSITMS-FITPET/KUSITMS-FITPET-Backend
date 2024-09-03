@@ -1,22 +1,27 @@
 package fitpet_be.presentation.controller;
 
-import ch.qos.logback.core.subst.Token;
 import fitpet_be.application.dto.request.AdminCreateRequest;
 import fitpet_be.application.dto.request.AdminLoginRequest;
+import fitpet_be.application.dto.request.EstimateHistoryExportRequest;
 import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.application.dto.request.EstimateUpdateRequest;
 import fitpet_be.application.dto.response.EstimateListResponse;
 import fitpet_be.application.service.AdminService;
 import fitpet_be.application.service.EstimateService;
-import fitpet_be.application.service.EstimateService;
 import fitpet_be.common.ApiResponse;
 import fitpet_be.common.PageResponse;
 import fitpet_be.domain.model.Admin;
+import fitpet_be.infrastructure.s3.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +38,7 @@ public class AdminController {
 
     private final AdminService adminService;
     private final EstimateService estimateService;
+    private final S3Service s3Service;
 
     @Operation(summary = "Admin 로그인", description = "Admin 계정으로 로그인 합니다")
     @PostMapping("/login")
@@ -101,6 +107,18 @@ public class AdminController {
         estimateService.updateEstimateAtAdmin(estimateId, request);
 
         return ApiResponse.onSuccess("견적서 수정본이 성공적으로 업로드되었습니다.");
+
+    }
+
+    @PostMapping("/estimates/export")
+    public ResponseEntity<Resource> exportHistory(@RequestBody EstimateHistoryExportRequest request)
+            throws IOException {
+
+        File file = s3Service.downloadFileFromS3("excels/OriginalSCExportFile.xlsx");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"SCEstimateHistory\"")
+                .body(estimateService.exportHistory(file, request.getExportInfoDtoList()));
 
     }
 
