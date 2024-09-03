@@ -55,4 +55,6 @@ public class Admin extends BaseTimeEntity {
         this.roleSites = roleSites;
         this.roleMaster = roleMaster;
     }
+
+
 }

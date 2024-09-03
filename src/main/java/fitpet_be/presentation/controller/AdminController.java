@@ -1,6 +1,7 @@
 package fitpet_be.presentation.controller;
 
 import ch.qos.logback.core.subst.Token;
+import fitpet_be.application.dto.request.AdminCreateRequest;
 import fitpet_be.application.dto.request.AdminLoginRequest;
 import fitpet_be.application.service.AdminService;
 import fitpet_be.common.ApiResponse;
@@ -22,7 +23,7 @@ public class AdminController {
 
     @Operation(summary = "Admin 로그인", description = "Admin 계정으로 로그인 합니다")
     @PostMapping("/login")
-    public ApiResponse<String> AdminLogin(@RequestBody AdminLoginRequest adminLoginRequest) {
+    public ApiResponse<String> adminLogin(@RequestBody AdminLoginRequest adminLoginRequest) {
 
         Admin admin = adminService.AdminLogin(adminLoginRequest);
 
@@ -31,4 +32,14 @@ public class AdminController {
         return ApiResponse.onSuccess(token);
 
     }
+
+    @Operation(summary = "Admin 생성", description = "새로운 Admin을 생성합니다")
+    @PostMapping("/register")
+    public ApiResponse<String> createAdmin(@RequestBody AdminCreateRequest adminCreateRequestn) {
+
+        return ApiResponse.onSuccess(adminService.createNewAdmin(adminCreateRequestn));
+
+    }
+
+
 }
