@@ -66,7 +66,7 @@ public class SecurityConfig {
                 session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize ->
                 authorize.requestMatchers(CorsUtils::isPreFlightRequest).permitAll()  // Preflight 요청 허용
-                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                    .requestMatchers("/api/v1/fitpetAdmin**").hasRole("ADMIN")
                     .anyRequest()
                     .authenticated())
             .exceptionHandling(handler -> handler
