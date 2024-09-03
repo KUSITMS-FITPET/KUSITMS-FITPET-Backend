@@ -39,11 +39,15 @@ public class SecurityConfig {
     }
 
     private static final String[] WHITE_LIST_URL = {
-        //application
-        "/api/**",
+        // Application URLs
+        "/api/v1/reviews/**",
+        "/api/v1/estimates/**",
+        "/api/v1/cardnews/**",
+        "/api/v1/faqs/**",
+        "/api/v1/partnership/**",
+        "/api/v1/fitpetAdmin/login/**",
 
-
-        // swagger
+        // Swagger URLs
         "/v3/api-docs/**",
         "/swagger-resources/**",
         "/swagger-ui/**",
@@ -62,18 +66,16 @@ public class SecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable)
             .csrf(AbstractHttpConfigurer::disable)
             .cors(withDefaults())  // CORS 설정 적용
-            .sessionManagement(
-                session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize ->
                 authorize.requestMatchers(CorsUtils::isPreFlightRequest).permitAll()  // Preflight 요청 허용
-                    .requestMatchers("/api/v1/fitpetAdmin**").hasRole("ADMIN")
-                    .anyRequest()
-                    .authenticated())
-            .exceptionHandling(handler -> handler
-                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                .accessDeniedHandler(jwtAccessDeniedHandler))
-            .addFilterBefore(jwtAuthenticationFilter,
-                UsernamePasswordAuthenticationFilter.class)
+                    .requestMatchers("/api/v1/fitpetAdmin/register").hasRole("MASTER")  // JWT 필요
+                    .anyRequest().permitAll())  // 나머지 요청은 인증 없이 접근 가능
+            .exceptionHandling(handler ->
+                handler.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                    .accessDeniedHandler(jwtAccessDeniedHandler))
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class);
 
         return http.build();

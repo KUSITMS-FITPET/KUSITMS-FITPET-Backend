@@ -1,5 +1,8 @@
 package fitpet_be.common.config;
 
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -11,9 +14,23 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI openAPI() {
+
+        String jwtSchemeName = "JWT TOKEN";
+
+        SecurityRequirement securityRequirement = new SecurityRequirement().addList(jwtSchemeName);
+
+        Components components = new Components()
+            .addSecuritySchemes(jwtSchemeName, new SecurityScheme()
+                .name(jwtSchemeName)
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT"));
+
         return new OpenAPI()
-            .addServersItem(new Server().url("/"))  // 서버 URL 설정
-            .info(apiInfo());  // API 정보 설정
+            .addServersItem(new Server().url("/"))
+            .info(apiInfo())
+            .addSecurityItem(securityRequirement)
+            .components(components);
     }
 
     private Info apiInfo() {

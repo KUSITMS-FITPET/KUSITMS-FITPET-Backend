@@ -1,5 +1,6 @@
 package fitpet_be.application.serviceImpl;
 
+import fitpet_be.application.dto.request.AdminCreateRequest;
 import fitpet_be.application.dto.request.AdminLoginRequest;
 import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.AdminService;
@@ -38,5 +39,16 @@ public class AdminServiceImpl implements AdminService {
     public String generateATAndRT(Admin admin) {
 
         return jwtProvider.generateAccessToken(admin.getId(), admin.getRoleContents(), admin.getRoleEstimates(), admin.getRoleSites(), admin.getRoleMaster());
+    }
+
+    @Transactional
+    public String createNewAdmin(AdminCreateRequest adminCreateRequest) {
+        saveAdmin(adminCreateRequest);
+        return "관리자가 등록 되었습니다";
+    }
+
+    private void saveAdmin(AdminCreateRequest adminCreateRequest) {
+        Admin admin = adminCreateRequest.toEntity(adminCreateRequest);
+        adminRepository.save(admin);
     }
 }
