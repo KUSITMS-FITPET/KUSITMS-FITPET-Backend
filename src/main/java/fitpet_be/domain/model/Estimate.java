@@ -47,14 +47,21 @@ public class Estimate extends BaseTimeEntity {
     @Column(name = "estimate_agreement", nullable = false)
     private boolean agreement;
 
+    @Column(name = "estimate_ip")
+    private String ip;
+
     @Column(name = "estimate_url")
     private String url;
 
+    @Column(name = "estimate_refeere")
+    private String refeere;
+
     @Builder
     public Estimate(String petInfo, String petName,
-        Long petAge, String petSpecies,
-        String phoneNumber, String moreInfo,
-        boolean agreement) {
+                    Long petAge, String petSpecies,
+                    String phoneNumber, String moreInfo,
+                    boolean agreement, String ip,
+                    String url, String refeere) {
 
         this.petInfo = petInfo;
         this.petName = petName;
@@ -63,6 +70,9 @@ public class Estimate extends BaseTimeEntity {
         this.phoneNumber = phoneNumber;
         this.moreInfo = moreInfo;
         this.agreement = agreement;
+        this.ip = ip;
+        this.url = url;
+        this.refeere = refeere;
 
     }
 
