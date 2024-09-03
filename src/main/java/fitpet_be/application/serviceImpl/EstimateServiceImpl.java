@@ -1,19 +1,28 @@
 package fitpet_be.application.serviceImpl;
 import fitpet_be.application.dto.EstimateUploadDto;
+import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.application.dto.request.EstimateServiceRequest;
+import fitpet_be.application.dto.response.CardnewsListResponse;
+import fitpet_be.application.dto.response.EstimateListResponse;
 import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.EstimateService;
 import fitpet_be.common.ErrorStatus;
+import fitpet_be.common.PageResponse;
+import fitpet_be.domain.model.Cardnews;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -111,6 +120,66 @@ public class EstimateServiceImpl implements EstimateService {
 
         String fileUrl = s3Service.uploadEstimate(estimateUploadDto);
         estimate.setUrl(fileUrl);
+    }
+
+    @Override
+    public PageResponse<EstimateListResponse> getEstimateListDesc(Pageable pageable) {
+
+        Page<Estimate> estimates = estimateRepository.findAllByOrderByDesc(pageable);
+
+        return getEstimateListResponsePageResponse(estimates);
+
+    }
+
+    @Override
+    public PageResponse<EstimateListResponse> getEstimateListAsc(Pageable pageable) {
+
+        Page<Estimate> estimates = estimateRepository.findAllByOrderByAsc(pageable);
+
+        return getEstimateListResponsePageResponse(estimates);
+
+    }
+
+    @Override
+    public PageResponse<EstimateListResponse> getEstimateListSearch(EstimateSearchRequest request, Pageable pageable) {
+
+        LocalDateTime startDate = LocalDateTime.parse(request.getStartDate());
+        LocalDateTime endDate = LocalDateTime.parse(request.getEndDate());
+
+        Page<Estimate> estimates =
+                estimateRepository.findAllBySearch(
+                        startDate, endDate,
+                        request.getRefeere(), request.getPetInfo(),
+                        request.getPhoneNumber(), pageable);
+
+        return getEstimateListResponsePageResponse(estimates);
+
+    }
+
+    private PageResponse<EstimateListResponse> getEstimateListResponsePageResponse(Page<Estimate> estimateList) {
+
+        List<EstimateListResponse> estimateListResponses = estimateList.stream()
+                .map(estimates -> EstimateListResponse.builder()
+                        .estimateId(estimates.getId())
+                        .estimateIP(estimates.getIp())
+                        .estimateRefeere(estimates.getRefeere())
+                        .createdAt(estimates.getCreatedAt())
+                        .petInfo(estimates.getPetInfo())
+                        .petName(estimates.getPetName())
+                        .petSpecies(estimates.getPetSpecies())
+                        .moreInfo(estimates.getMoreInfo())
+                        .phoneNumber(estimates.getPhoneNumber())
+                        .build())
+                .toList();
+
+        Long totalCount = estimateRepository.estimateTotalCount();
+
+        return PageResponse.<EstimateListResponse>builder()
+                .listPageResponse(estimateListResponses)
+                .totalCount(totalCount)
+                .size(estimateListResponses.size())
+                .build();
+
     }
 
     private void setSheet(XSSFWorkbook workbook, int setSheet, Estimate estimate) {
