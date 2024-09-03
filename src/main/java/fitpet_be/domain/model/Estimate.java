@@ -45,7 +45,7 @@ public class Estimate extends BaseTimeEntity {
     private String moreInfo;
 
     @Column(name = "estimate_agreement", nullable = false)
-    private boolean agreement;
+    private Boolean agreement;
 
     @Column(name = "estimate_url")
     private String url;
