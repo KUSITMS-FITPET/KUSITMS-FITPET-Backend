@@ -18,7 +18,13 @@ public enum ErrorStatus implements BaseErrorCode {
     _REVEIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW404", "해당 리뷰를 찾을 수 없습니다."),
     _CARDNEWS_NOT_FOUND(HttpStatus.NOT_FOUND, "CARDNEWS404", "해당 카드뉴스를 찾을 수 없습니다."),
     _ESTIMATES_NOT_FOUND(HttpStatus.NOT_FOUND, "ESTIMATES404", "해당 견적서를 찾을 수 없습니다."),
-    _FILE_DOWNLOAD_FAILED(HttpStatus.BAD_REQUEST, "FILE404", "파일을 다운받을 수 없습니다.");
+    _FILE_DOWNLOAD_FAILED(HttpStatus.BAD_REQUEST, "FILE404", "파일을 다운받을 수 없습니다."),
+    _ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN404", "해당 관리자를 찾을 수 없습니다."),
+    _ADMIN_NOT_VALID(HttpStatus.UNAUTHORIZED, "ADMIN400", "비밀번호가 일치하지 않습니다"),
+    _JWT_NOT_FOUND(HttpStatus.NOT_FOUND, "JWT404", "토큰을 찾을 수 없습니다"),
+    _JWT_INVALID(HttpStatus.UNAUTHORIZED, "JWT400", "유효하지 않는 토큰입니다"),
+    _JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "JWT400", "만료된 토큰입니다"),
+    _JWT_BLACKLIST(HttpStatus.UNAUTHORIZED, "JWT400", "접근 불가능한 토큰입니다");
 
 
 
