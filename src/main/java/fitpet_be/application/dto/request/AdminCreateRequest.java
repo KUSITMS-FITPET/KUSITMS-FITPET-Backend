@@ -1,7 +1,6 @@
 package fitpet_be.application.dto.request;
 
 import fitpet_be.domain.model.Admin;
-import fitpet_be.domain.model.Estimate;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

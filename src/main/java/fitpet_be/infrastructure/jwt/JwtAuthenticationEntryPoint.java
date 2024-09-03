@@ -10,6 +10,7 @@ import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
@@ -22,29 +23,28 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         AuthenticationException authException) throws IOException, ServletException {
 
         ErrorStatus exception = (ErrorStatus) request.getAttribute("exception");
-        log.info("===================== EntryPoint - Exception Control : " + request.getAttribute(
-            "exception"));
 
-        if (exception.equals(ErrorStatus._JWT_NOT_FOUND)) {
-            try {
-                exceptionHandler(response, ErrorStatus._JWT_NOT_FOUND,
-                    HttpServletResponse.SC_UNAUTHORIZED);
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
-        } else if (exception.equals(ErrorStatus._JWT_INVALID)) {
-            try {
+
+        log.info("===================== EntryPoint - Exception Control : " + exception);
+
+        try {
+            if (exception.equals(ErrorStatus._JWT_NOT_FOUND)) {
+                exceptionHandler(response, ErrorStatus._JWT_NOT_FOUND, HttpServletResponse.SC_UNAUTHORIZED);
+            } else if (exception.equals(ErrorStatus._JWT_INVALID)) {
                 exceptionHandler(response, ErrorStatus._JWT_INVALID, HttpServletResponse.SC_UNAUTHORIZED);
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
-        } else if (exception.equals(ErrorStatus._JWT_EXPIRED)) {
-            try {
+            } else if (exception.equals(ErrorStatus._JWT_EXPIRED)) {
                 exceptionHandler(response, ErrorStatus._JWT_EXPIRED, HttpServletResponse.SC_UNAUTHORIZED);
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
             }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
         }
     }
 
+    private void exceptionHandler(HttpServletResponse response, ErrorStatus errorStatus, int status) throws IOException, JSONException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{ \"error\": \"" + errorStatus.name() + "\" }");
+    }
 }
+

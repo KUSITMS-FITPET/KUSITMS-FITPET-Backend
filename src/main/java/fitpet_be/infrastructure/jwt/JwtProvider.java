@@ -13,11 +13,17 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import java.security.Key;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
 
 @Component
 public class JwtProvider {
@@ -63,7 +69,7 @@ public class JwtProvider {
             .claim(ADMIN_ID, adminId)
             .claim("ROLE_CONTENTS", roleContents)  // boolean 값
             .claim("ROLE_ESTIMATES", roleEstimates)  // boolean 값
-            .claim("ROLE_SITES", roleSites)  // boolean 값
+            .claim("ROLE_SITES", roleSites)
             .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
             .setExpiration(expiredAt)
             .signWith(key, SignatureAlgorithm.HS256)
@@ -96,6 +102,28 @@ public class JwtProvider {
         } catch (SignatureException | MalformedJwtException e) {
             return "INVALID";
         }
+    }
+
+    public Authentication getAuthentication(String token) {
+        Claims claims = parseClaims(token);
+
+        // JWT에서 클레임을 가져옵니다.
+        String adminId = claims.get(ADMIN_ID, String.class);
+        Boolean roleContents = claims.get("ROLE_CONTENTS", Boolean.class);
+        Boolean roleEstimates = claims.get("ROLE_ESTIMATES", Boolean.class);
+        Boolean roleSites = claims.get("ROLE_SITES", Boolean.class);
+        Boolean roleMaster = claims.get("ROLE_MASTER", Boolean.class);
+
+        // 권한을 생성합니다.
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        if (roleContents) authorities.add(new SimpleGrantedAuthority("ROLE_CONTENTS"));
+        if (roleEstimates) authorities.add(new SimpleGrantedAuthority("ROLE_ESTIMATES"));
+        if (roleSites) authorities.add(new SimpleGrantedAuthority("ROLE_SITES"));
+        if (roleMaster) authorities.add(new SimpleGrantedAuthority("ROLE_MASTER"));
+
+        // Authentication 객체를 생성합니다.
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(adminId, "", authorities);
+        return new UsernamePasswordAuthenticationToken(userDetails, token, authorities);
     }
 
 
