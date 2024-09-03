@@ -39,10 +39,13 @@ public class Admin extends BaseTimeEntity {
     @Column(name = "admin_role_sites", nullable = false)
     private Boolean roleSites;
 
+    @Column(name = "admin_role_master", nullable = false)
+    private Boolean roleMaster;
+
     @Builder
     public Admin(String id, String password,
         String name, Boolean roleContents,
-        Boolean roleEstimates, Boolean roleSites) {
+        Boolean roleEstimates, Boolean roleSites, Boolean roleMaster) {
 
         this.id = id;
         this.password = password;
@@ -50,5 +53,6 @@ public class Admin extends BaseTimeEntity {
         this.roleContents = roleContents;
         this.roleEstimates = roleEstimates;
         this.roleSites = roleSites;
+        this.roleMaster = roleMaster;
     }
 }
