@@ -2,6 +2,7 @@ package fitpet_be.application.serviceImpl;
 import fitpet_be.application.dto.EstimateUploadDto;
 import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.application.dto.request.EstimateServiceRequest;
+import fitpet_be.application.dto.request.EstimateUpdateRequest;
 import fitpet_be.application.dto.response.CardnewsListResponse;
 import fitpet_be.application.dto.response.EstimateListResponse;
 import fitpet_be.application.exception.ApiException;
@@ -14,6 +15,7 @@ import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
@@ -39,6 +41,7 @@ public class EstimateServiceImpl implements EstimateService {
 
     private static final String EXCEL_FOLDER = "excels/";
     private static final String ORIGINAL_FILE_KEY = EXCEL_FOLDER + "OriginalSCFile.xlsx";
+    private static final String ORIGINAL_OUTPUT_FILE_KEY = EXCEL_FOLDER + "OriginalSCOutputFile.xlsx";
 
     private final EstimateRepository estimateRepository;
     private final S3Service s3Service;
@@ -53,7 +56,7 @@ public class EstimateServiceImpl implements EstimateService {
     @Override
     public void downloadEstimate(Long estimateId) {
         Estimate estimate = estimateRepository.findById(estimateId).orElseThrow(
-            () -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND)
+                () -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND)
         );
 
         String fileUrl = estimate.getUrl();
@@ -65,14 +68,13 @@ public class EstimateServiceImpl implements EstimateService {
             tempFile = File.createTempFile("estimate-", ".xlsx");
 
             try (InputStream in = url.openStream();
-                FileOutputStream out = new FileOutputStream(tempFile)) {
+                 FileOutputStream out = new FileOutputStream(tempFile)) {
 
                 byte[] buffer = new byte[1024];
                 int bytesRead;
                 while ((bytesRead = in.read(buffer)) != -1) {
                     out.write(buffer, 0, bytesRead);
                 }
-
 
                 // 견적서 추출 로직
 
@@ -143,8 +145,12 @@ public class EstimateServiceImpl implements EstimateService {
     @Override
     public PageResponse<EstimateListResponse> getEstimateListSearch(EstimateSearchRequest request, Pageable pageable) {
 
-        LocalDateTime startDate = LocalDateTime.parse(request.getStartDate());
-        LocalDateTime endDate = LocalDateTime.parse(request.getEndDate());
+        // DateTimeFormatter를 사용하여 정확한 포맷 지정
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        // startDate와 endDate를 LocalDateTime으로 변환
+        LocalDateTime startDate = LocalDateTime.parse(request.getStartDate(), formatter);
+        LocalDateTime endDate = LocalDateTime.parse(request.getEndDate(), formatter);
 
         Page<Estimate> estimates =
                 estimateRepository.findAllBySearch(
@@ -153,6 +159,33 @@ public class EstimateServiceImpl implements EstimateService {
                         request.getPhoneNumber(), pageable);
 
         return getEstimateListResponsePageResponse(estimates);
+
+    }
+
+    @Override
+    public void updateEstimateAtAdmin(Long estimateId, EstimateUpdateRequest request) {
+
+        Estimate originalEstimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
+
+        Estimate newEstimate = Estimate.builder()
+                .ip(originalEstimate.getIp())
+                .agreement(originalEstimate.getAgreement())
+                .moreInfo(request.getMoreInfo())
+                .petAge(request.getPetAge())
+                .petInfo(request.getPetInfo())
+                .petName(request.getPetName())
+                .petSpecies(request.getPetSpecies())
+                .phoneNumber(request.getPhoneNumber())
+                .build();
+
+        try {
+            uploadEstimate(newEstimate);
+            estimateRepository.save(newEstimate);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new ApiException(ErrorStatus._ESTIMATE_UPLOAD_FAILED);
+        }
 
     }
 

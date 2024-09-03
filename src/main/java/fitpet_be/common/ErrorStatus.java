@@ -18,6 +18,7 @@ public enum ErrorStatus implements BaseErrorCode {
     _REVEIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW404", "해당 리뷰를 찾을 수 없습니다."),
     _CARDNEWS_NOT_FOUND(HttpStatus.NOT_FOUND, "CARDNEWS404", "해당 카드뉴스를 찾을 수 없습니다."),
     _ESTIMATES_NOT_FOUND(HttpStatus.NOT_FOUND, "ESTIMATES404", "해당 견적서를 찾을 수 없습니다."),
+    _ESTIMATE_UPLOAD_FAILED(HttpStatus.BAD_REQUEST, "ESTIMATE_UPLOAD_FAILED", "견적서 업로드에 실패했습니다."),
     _FILE_DOWNLOAD_FAILED(HttpStatus.BAD_REQUEST, "FILE404", "파일을 다운받을 수 없습니다."),
     _ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN404", "해당 관리자를 찾을 수 없습니다."),
     _ADMIN_NOT_VALID(HttpStatus.UNAUTHORIZED, "ADMIN400", "비밀번호가 일치하지 않습니다"),
