@@ -9,6 +9,7 @@ import fitpet_be.domain.model.Admin;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,8 +39,8 @@ public class AdminController {
     }
 
     @Operation(summary = "Admin 생성", description = "새로운 Admin을 생성합니다")
-    @PostMapping("/register")
-    public ApiResponse<String> createAdmin(@RequestBody AdminCreateRequest adminCreateRequest, HttpServletRequest request) {
+    @PostMapping("/master/register")
+    public ApiResponse<String> createAdmins(@RequestBody AdminCreateRequest adminCreateRequest, HttpServletRequest request) {
 
         return ApiResponse.onSuccess(adminService.createNewAdmin(adminCreateRequest));
 
@@ -47,10 +48,18 @@ public class AdminController {
 
     @Operation(summary = "Admin 삭제", description = "기존 Admin을 삭제합니다")
     @Parameter(name = "adminId", description = "관리자 ID", required = true, example = "admin1")
-    @DeleteMapping("/delete/{adminId}")
-    public ApiResponse<String> deleteAdmin(@PathVariable String adminId, HttpServletRequest request) {
+    @DeleteMapping("/master/delete/{adminId}")
+    public ApiResponse<String> deleteAdmins(@PathVariable String adminId, HttpServletRequest request) {
 
         return ApiResponse.onSuccess(adminService.deleteExistAdmin(adminId));
+
+    }
+
+    @Operation(summary = "Admin 조회", description = "기존 Admin을 조회합니다")
+    @GetMapping("/master")
+    public ApiResponse<List<Admin>> getAdmins(HttpServletRequest request) {
+
+        return ApiResponse.onSuccess(adminService.getAdminList());
 
     }
 

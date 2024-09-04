@@ -8,6 +8,7 @@ import fitpet_be.common.ErrorStatus;
 import fitpet_be.domain.model.Admin;
 import fitpet_be.domain.repository.AdminRepository;
 import fitpet_be.infrastructure.jwt.JwtProvider;
+import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -56,6 +57,11 @@ public class AdminServiceImpl implements AdminService {
         adminRepository.delete(admin);
 
         return "관리자가 삭제 되었습니다";
+    }
+
+    @Override
+    public List<Admin> getAdminList() {
+        return adminRepository.findAllByOrderByDesc();
     }
 
     private void saveAdmin(AdminCreateRequest adminCreateRequest) {
