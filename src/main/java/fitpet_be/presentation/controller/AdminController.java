@@ -1,5 +1,6 @@
 package fitpet_be.presentation.controller;
 
+import fitpet_be.application.dto.request.AdminAccessRequest;
 import fitpet_be.application.dto.request.AdminCreateRequest;
 import fitpet_be.application.dto.request.AdminLoginRequest;
 import fitpet_be.application.dto.response.AdminDetailResponse;
@@ -185,9 +186,9 @@ public class AdminController {
     public ResponseEntity<Resource> downloadEstimatePdf() throws IOException {
 
 //        File file = s3Service.downloadFileFromS3("estimates/" + estimateService.getEstimateFileName(estimateId));
-        File file = s3Service.downloadFileFromS3("estimates/01041023041_2024-09-03T19:39:15.272190700.xlsx");
+        File file = s3Service.downloadFileFromS3("estimates/01041023041_2024-09-03T19:39:15.272190700.xlsx"); //test용 S3에서 파일 하나 지정했음
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"converted.pdf\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"converted.pdf\"") //converted 실사용 때는 fileName으로 변경
                 .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
                 .body(estimateService.convertExcelToPdf(file));
 
