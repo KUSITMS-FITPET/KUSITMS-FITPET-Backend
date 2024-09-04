@@ -80,42 +80,6 @@ public class AdminServiceImpl implements AdminService {
         return "관리자 권한이 등록되었습니다";
     }
 
-    @Override
-    public HttpServletResponse addCookies(Admin admin, HttpServletResponse response) {
-
-        String estimateRole = admin.getRoleEstimates().toString();
-        String siteRole = admin.getRoleSites().toString();
-        String masterRole = admin.getRoleMaster().toString();
-        String contentsRole = admin.getRoleContents().toString();
-
-        // 각각의 쿠키 생성 및 설정
-        Cookie estimateRoleCookie = new Cookie("estimate_role", estimateRole);
-        estimateRoleCookie.setHttpOnly(true);
-        estimateRoleCookie.setPath("/");
-        estimateRoleCookie.setMaxAge(7 * 24 * 60 * 60);
-        response.addCookie(estimateRoleCookie);
-
-        Cookie siteRoleCookie = new Cookie("site_role", siteRole);
-        siteRoleCookie.setHttpOnly(true);
-        siteRoleCookie.setPath("/");
-        siteRoleCookie.setMaxAge(7 * 24 * 60 * 60);
-        response.addCookie(siteRoleCookie);
-
-        Cookie masterRoleCookie = new Cookie("master_role", masterRole);
-        masterRoleCookie.setHttpOnly(true);
-        masterRoleCookie.setPath("/");
-        masterRoleCookie.setMaxAge(7 * 24 * 60 * 60);
-        response.addCookie(masterRoleCookie);
-
-        Cookie contentsRoleCookie = new Cookie("contents_role", contentsRole);
-        contentsRoleCookie.setHttpOnly(true);
-        contentsRoleCookie.setPath("/");
-        contentsRoleCookie.setMaxAge(7 * 24 * 60 * 60);
-        response.addCookie(contentsRoleCookie);
-
-        return response;
-    }
-
     private void saveAdmin(AdminCreateRequest adminCreateRequest) {
         Admin admin = adminCreateRequest.toEntity(adminCreateRequest);
         adminRepository.save(admin);

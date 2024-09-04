@@ -4,9 +4,11 @@ import ch.qos.logback.core.subst.Token;
 import fitpet_be.application.dto.request.AdminAccessRequest;
 import fitpet_be.application.dto.request.AdminCreateRequest;
 import fitpet_be.application.dto.request.AdminLoginRequest;
+import fitpet_be.application.dto.response.AdminDetailResponse;
 import fitpet_be.application.service.AdminService;
 import fitpet_be.common.ApiResponse;
 import fitpet_be.domain.model.Admin;
+import fitpet_be.domain.model.Contact;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.Cookie;
@@ -32,15 +34,22 @@ public class AdminController {
 
     @Operation(summary = "Admin 로그인", description = "Admin 계정으로 로그인 합니다")
     @PostMapping("/login")
-    public ApiResponse<String> adminLogin(@RequestBody AdminLoginRequest adminLoginRequest, HttpServletResponse response) {
+    public ApiResponse<AdminDetailResponse> adminLogin(@RequestBody AdminLoginRequest adminLoginRequest) {
 
         Admin admin = adminService.AdminLogin(adminLoginRequest);
 
         String token = adminService.generateATAndRT(admin);
 
-        adminService.addCookies(admin, response);
+        AdminDetailResponse adminDetailResponse = AdminDetailResponse.builder()
+            .accessToken(token)
+            .name(admin.getName())
+            .roleContents(admin.getRoleContents())
+            .roleEstimates(admin.getRoleEstimates())
+            .roleSites(admin.getRoleSites())
+            .roleMaster(admin.getRoleMaster())
+            .build();
 
-        return ApiResponse.onSuccess(token);
+        return ApiResponse.onSuccess(adminDetailResponse);
     }
 
     @Operation(summary = "Admin 생성", description = "새로운 Admin을 생성합니다")
