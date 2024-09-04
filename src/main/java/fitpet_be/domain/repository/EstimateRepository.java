@@ -3,6 +3,9 @@ package fitpet_be.domain.repository;
 import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.infrastructure.persistence.JpaEstimateRepository;
+import io.lettuce.core.dynamic.annotation.Param;
+import java.time.LocalDate;
+import org.springframework.data.jpa.repository.Query;
 import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +13,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface EstimateRepository extends JpaEstimateRepository {
+
+    @Query("SELECT COUNT(e) FROM Estimate e WHERE DATE(e.createdAt) = :today")
+    Integer countEstimateByCreatedAtToday(@Param("today") LocalDate today);
 
     @Query("SELECT e FROM Estimate e ORDER BY e.createdAt DESC ")
     Page<Estimate> findAllByOrderByDesc(Pageable pageable);
