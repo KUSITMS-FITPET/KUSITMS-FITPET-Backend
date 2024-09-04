@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ContactRepository extends JpaContactRepository {
     @Query("SELECT COUNT(c) FROM Contact c WHERE DATE(c.createdAt) = :today")
-    Long countContactsByCreatedAtToday(@Param("today") LocalDate today);
+    Integer countContactsByCreatedAtToday(@Param("today") LocalDate today);
 }

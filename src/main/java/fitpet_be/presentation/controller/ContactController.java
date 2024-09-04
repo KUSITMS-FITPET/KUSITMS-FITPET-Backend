@@ -1,6 +1,5 @@
 package fitpet_be.presentation.controller;
 
-import fitpet_be.application.dto.response.ContactCountResponse;
 import fitpet_be.application.service.ContactService;
 import fitpet_be.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +25,7 @@ public class ContactController {
 
     @Operation(summary = "오늘의 문의 횟수", description = "전화 문의와 카카오톡 문의 횟수 가져오기")
     @GetMapping("/mainpages")
-    public ApiResponse<ContactCountResponse> getContacts(){
+    public ApiResponse<Integer> getContacts(){
 
         return ApiResponse.onSuccess(contactService.getCounts());
     }

@@ -1,6 +1,5 @@
 package fitpet_be.application.serviceImpl;
 
-import fitpet_be.application.dto.response.ContactCountResponse;
 import fitpet_be.application.service.ContactService;
 import fitpet_be.domain.model.Contact;
 import fitpet_be.domain.repository.ContactRepository;
@@ -29,13 +28,10 @@ public class ContactServiceImpl implements ContactService {
     }
 
     @Override
-    public ContactCountResponse getCounts() {
-        Long todayPhoneCount = contactRepository.countContactsByCreatedAtToday(LocalDate.now());
-        Long todayTalksCount = estimateRepository.countEstimateByCreatedAtToday(LocalDate.now());
+    public Integer getCounts() {
+        Integer todayPhoneCount = contactRepository.countContactsByCreatedAtToday(LocalDate.now());
+        Integer todayTalksCount = estimateRepository.countEstimateByCreatedAtToday(LocalDate.now());
 
-        return ContactCountResponse.builder()
-            .phoneContacts(todayPhoneCount)
-            .TalksContacts(todayTalksCount)
-            .build();
+        return todayPhoneCount + todayTalksCount;
     }
 }
