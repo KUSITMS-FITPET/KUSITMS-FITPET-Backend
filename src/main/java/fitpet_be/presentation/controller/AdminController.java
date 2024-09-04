@@ -9,7 +9,9 @@ import fitpet_be.domain.model.Admin;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,6 +41,13 @@ public class AdminController {
     public ApiResponse<String> createAdmin(@RequestBody AdminCreateRequest adminCreateRequest, HttpServletRequest request) {
 
         return ApiResponse.onSuccess(adminService.createNewAdmin(adminCreateRequest));
+
+    }
+
+    @DeleteMapping("/delete/{adminId}")
+    public ApiResponse<String> deleteAdmin(@PathVariable String adminId, HttpServletRequest request) {
+
+        return ApiResponse.onSuccess(adminService.deleteExistAdmin(adminId));
 
     }
 

@@ -47,6 +47,17 @@ public class AdminServiceImpl implements AdminService {
         return "관리자가 등록 되었습니다";
     }
 
+    @Transactional
+    public String deleteExistAdmin(String adminId) {
+        Admin admin = adminRepository.findById(adminId).orElseThrow(
+            () -> new ApiException(ErrorStatus._ADMIN_NOT_FOUND)
+        );
+
+        adminRepository.delete(admin);
+
+        return "관리자가 삭제 되었습니다";
+    }
+
     private void saveAdmin(AdminCreateRequest adminCreateRequest) {
         Admin admin = adminCreateRequest.toEntity(adminCreateRequest);
         adminRepository.save(admin);

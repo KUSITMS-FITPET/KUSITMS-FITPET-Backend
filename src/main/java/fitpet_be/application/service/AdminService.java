@@ -10,4 +10,6 @@ public interface AdminService {
     String generateATAndRT(Admin admin);
 
     String createNewAdmin(AdminCreateRequest adminCreateRequest);
+
+    String deleteExistAdmin(String adminId);
 }
