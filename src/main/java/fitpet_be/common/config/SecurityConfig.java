@@ -70,7 +70,7 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize ->
                 authorize.requestMatchers(CorsUtils::isPreFlightRequest).permitAll()  // Preflight 요청 허용
-                    .requestMatchers("/api/v1/fitpetAdmin/register").hasRole("MASTER")  // JWT 필요
+                    .requestMatchers("/api/v1/fitpetAdmin/register", "/api/v1/fitpetAdmin/delete/**").hasRole("MASTER")  // JWT 필요
                     .anyRequest().permitAll())  // 나머지 요청은 인증 없이 접근 가능
             .exceptionHandling(handler ->
                 handler.authenticationEntryPoint(jwtAuthenticationEntryPoint)
