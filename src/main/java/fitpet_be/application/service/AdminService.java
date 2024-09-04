@@ -20,5 +20,4 @@ public interface AdminService {
 
     String authorizeAdmin(AdminAccessRequest adminAccessRequest);
 
-    HttpServletResponse addCookies(Admin admin, HttpServletResponse response);
 }
