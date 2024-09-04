@@ -52,5 +52,15 @@ public class Admin extends BaseTimeEntity {
         this.roleMaster = roleMaster;
     }
 
+    public void setRole(Boolean roleContents,
+        Boolean roleEstimates, Boolean roleSites, Boolean roleMaster) {
+
+        this.roleContents = roleContents;
+        this.roleEstimates = roleEstimates;
+        this.roleSites = roleSites;
+        this.roleMaster = roleMaster;
+
+    }
+
 
 }

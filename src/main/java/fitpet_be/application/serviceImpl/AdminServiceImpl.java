@@ -1,5 +1,6 @@
 package fitpet_be.application.serviceImpl;
 
+import fitpet_be.application.dto.request.AdminAccessRequest;
 import fitpet_be.application.dto.request.AdminCreateRequest;
 import fitpet_be.application.dto.request.AdminLoginRequest;
 import fitpet_be.application.exception.ApiException;
@@ -62,6 +63,19 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public List<Admin> getAdminList() {
         return adminRepository.findAllByOrderByDesc();
+    }
+
+    @Transactional
+    public String authorizeAdmin(AdminAccessRequest adminAccessRequest) {
+        String adminId = adminAccessRequest.getAdminId();
+        Admin admin = adminRepository.findById(adminId).orElseThrow(
+            () -> new ApiException(ErrorStatus._ADMIN_NOT_FOUND)
+        );
+
+        admin.setRole(adminAccessRequest.getRoleContents(), adminAccessRequest.getRoleEstimates(),
+            adminAccessRequest.getRoleSites(), adminAccessRequest.getRoleMaster());
+
+        return "관리자 권한이 등록되었습니다";
     }
 
     private void saveAdmin(AdminCreateRequest adminCreateRequest) {

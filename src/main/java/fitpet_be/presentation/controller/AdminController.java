@@ -1,6 +1,7 @@
 package fitpet_be.presentation.controller;
 
 import ch.qos.logback.core.subst.Token;
+import fitpet_be.application.dto.request.AdminAccessRequest;
 import fitpet_be.application.dto.request.AdminCreateRequest;
 import fitpet_be.application.dto.request.AdminLoginRequest;
 import fitpet_be.application.service.AdminService;
@@ -13,6 +14,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,7 +50,7 @@ public class AdminController {
 
     @Operation(summary = "Admin 삭제", description = "기존 Admin을 삭제합니다")
     @Parameter(name = "adminId", description = "관리자 ID", required = true, example = "admin1")
-    @DeleteMapping("/master/delete/{adminId}")
+    @DeleteMapping("/master/{adminId}")
     public ApiResponse<String> deleteAdmins(@PathVariable String adminId, HttpServletRequest request) {
 
         return ApiResponse.onSuccess(adminService.deleteExistAdmin(adminId));
@@ -62,6 +64,15 @@ public class AdminController {
         return ApiResponse.onSuccess(adminService.getAdminList());
 
     }
+
+    @Operation(summary = "Admin 권한등록", description = "기존 Admin의 권한을 수정합니다")
+    @PatchMapping("/master/access")
+    public ApiResponse<String> authorizeAdmins(@RequestBody AdminAccessRequest adminAccessRequest, HttpServletRequest request) {
+
+        return ApiResponse.onSuccess(adminService.authorizeAdmin(adminAccessRequest));
+
+    }
+
 
 
 }

@@ -1,5 +1,6 @@
 package fitpet_be.application.service;
 
+import fitpet_be.application.dto.request.AdminAccessRequest;
 import fitpet_be.application.dto.request.AdminCreateRequest;
 import fitpet_be.application.dto.request.AdminLoginRequest;
 import fitpet_be.domain.model.Admin;
@@ -15,4 +16,6 @@ public interface AdminService {
     String deleteExistAdmin(String adminId);
 
     List<Admin> getAdminList();
+
+    String authorizeAdmin(AdminAccessRequest adminAccessRequest);
 }
