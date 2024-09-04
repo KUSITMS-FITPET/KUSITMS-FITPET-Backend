@@ -4,6 +4,7 @@ import fitpet_be.application.dto.request.AdminAccessRequest;
 import fitpet_be.application.dto.request.AdminCreateRequest;
 import fitpet_be.application.dto.request.AdminLoginRequest;
 import fitpet_be.domain.model.Admin;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 
 public interface AdminService {
@@ -18,4 +19,6 @@ public interface AdminService {
     List<Admin> getAdminList();
 
     String authorizeAdmin(AdminAccessRequest adminAccessRequest);
+
+    HttpServletResponse addCookies(Admin admin, HttpServletResponse response);
 }

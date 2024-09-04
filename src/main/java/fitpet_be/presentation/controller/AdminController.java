@@ -9,7 +9,9 @@ import fitpet_be.common.ApiResponse;
 import fitpet_be.domain.model.Admin;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,14 +32,15 @@ public class AdminController {
 
     @Operation(summary = "Admin 로그인", description = "Admin 계정으로 로그인 합니다")
     @PostMapping("/login")
-    public ApiResponse<String> adminLogin(@RequestBody AdminLoginRequest adminLoginRequest) {
+    public ApiResponse<String> adminLogin(@RequestBody AdminLoginRequest adminLoginRequest, HttpServletResponse response) {
 
         Admin admin = adminService.AdminLogin(adminLoginRequest);
 
         String token = adminService.generateATAndRT(admin);
 
-        return ApiResponse.onSuccess(token);
+        adminService.addCookies(admin, response);
 
+        return ApiResponse.onSuccess(token);
     }
 
     @Operation(summary = "Admin 생성", description = "새로운 Admin을 생성합니다")
@@ -72,7 +75,6 @@ public class AdminController {
         return ApiResponse.onSuccess(adminService.authorizeAdmin(adminAccessRequest));
 
     }
-
 
 
 }
