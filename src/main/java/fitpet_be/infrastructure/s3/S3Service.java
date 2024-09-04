@@ -25,6 +25,7 @@ public class S3Service {
     private static final String ESTIMATES_FOLDER = "estimates/";
     private static final String EXCEL_FOLDER = "excels/";
     public static final String ORIGINAL_FILE_KEY = EXCEL_FOLDER + "OriginalSCFile.xlsx";
+    public static final String ORIGINAL_EXPORT_FILE_KEY = EXCEL_FOLDER + "OriginalSCExportFile.xlsx";
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -59,6 +60,7 @@ public class S3Service {
         }
         return tempFile;
     }
+
 
     // S3에 File 객체를 업로드
     private String uploadToS3(File file, String folder, String fileName) {

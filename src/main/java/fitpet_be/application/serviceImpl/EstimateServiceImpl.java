@@ -1,19 +1,60 @@
 package fitpet_be.application.serviceImpl;
+import com.itextpdf.io.image.ImageDataFactory;
 import fitpet_be.application.dto.EstimateUploadDto;
+import fitpet_be.application.dto.HistoryExportInfoDto;
+import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.application.dto.request.EstimateServiceRequest;
+import fitpet_be.application.dto.request.EstimateUpdateRequest;
+import fitpet_be.application.dto.response.CardnewsListResponse;
+import fitpet_be.application.dto.response.EstimateListResponse;
 import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.EstimateService;
 import fitpet_be.common.ErrorStatus;
+import fitpet_be.common.PageResponse;
+import fitpet_be.domain.model.Cardnews;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
+import java.awt.AWTException;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import com.itextpdf.layout.element.Image;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +72,8 @@ public class EstimateServiceImpl implements EstimateService {
     private static final String EXCEL_FOLDER = "excels/";
     private static final String ORIGINAL_FILE_KEY = EXCEL_FOLDER + "OriginalSCFile.xlsx";
 
+    public static final String ORIGINAL_EXPORT_FILE_KEY = EXCEL_FOLDER + "OriginalSCExportFile.xlsx";
+
     private final EstimateRepository estimateRepository;
     private final S3Service s3Service;
 
@@ -42,9 +85,19 @@ public class EstimateServiceImpl implements EstimateService {
     }
 
     @Override
+    public String getEstimateFileName(Long estimateId) {
+
+        Estimate estimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
+
+        return estimate.getPhoneNumber() + "_" + estimate.getCreatedAt() + ".xlsx";
+
+    }
+
+    @Override
     public void downloadEstimate(Long estimateId) {
         Estimate estimate = estimateRepository.findById(estimateId).orElseThrow(
-            () -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND)
+                () -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND)
         );
 
         String fileUrl = estimate.getUrl();
@@ -56,14 +109,13 @@ public class EstimateServiceImpl implements EstimateService {
             tempFile = File.createTempFile("estimate-", ".xlsx");
 
             try (InputStream in = url.openStream();
-                FileOutputStream out = new FileOutputStream(tempFile)) {
+                 FileOutputStream out = new FileOutputStream(tempFile)) {
 
                 byte[] buffer = new byte[1024];
                 int bytesRead;
                 while ((bytesRead = in.read(buffer)) != -1) {
                     out.write(buffer, 0, bytesRead);
                 }
-
 
                 // 견적서 추출 로직
 
@@ -113,6 +165,182 @@ public class EstimateServiceImpl implements EstimateService {
         estimate.setUrl(fileUrl);
     }
 
+    @Override
+    public PageResponse<EstimateListResponse> getEstimateListDesc(Pageable pageable) {
+
+        Page<Estimate> estimates = estimateRepository.findAllByOrderByDesc(pageable);
+
+        return getEstimateListResponsePageResponse(estimates);
+
+    }
+
+    @Override
+    public PageResponse<EstimateListResponse> getEstimateListAsc(Pageable pageable) {
+
+        Page<Estimate> estimates = estimateRepository.findAllByOrderByAsc(pageable);
+
+        return getEstimateListResponsePageResponse(estimates);
+
+    }
+
+    @Override
+    public PageResponse<EstimateListResponse> getEstimateListSearch(EstimateSearchRequest request, Pageable pageable) {
+
+        // DateTimeFormatter를 사용하여 정확한 포맷 지정
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        // startDate와 endDate를 LocalDateTime으로 변환
+        LocalDateTime startDate = LocalDateTime.parse(request.getStartDate(), formatter);
+        LocalDateTime endDate = LocalDateTime.parse(request.getEndDate(), formatter);
+
+        Page<Estimate> estimates =
+                estimateRepository.findAllBySearch(
+                        startDate, endDate,
+                        request.getRefeere(), request.getPetInfo(),
+                        request.getPhoneNumber(), pageable);
+
+        return getEstimateListResponsePageResponse(estimates);
+
+    }
+
+    @Override
+    public void updateEstimateAtAdmin(Long estimateId, EstimateUpdateRequest request) {
+
+        Estimate originalEstimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
+
+        Estimate newEstimate = Estimate.builder()
+                .ip(originalEstimate.getIp())
+                .agreement(originalEstimate.getAgreement())
+                .moreInfo(request.getMoreInfo())
+                .petAge(request.getPetAge())
+                .petInfo(request.getPetInfo())
+                .petName(request.getPetName())
+                .petSpecies(request.getPetSpecies())
+                .phoneNumber(request.getPhoneNumber())
+                .build();
+
+        try {
+            uploadEstimate(newEstimate);
+            estimateRepository.save(newEstimate);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new ApiException(ErrorStatus._ESTIMATE_UPLOAD_FAILED);
+        }
+
+    }
+
+    // 견적서 히스토리 추출
+    @Override
+    public Resource exportHistory(File file, List<HistoryExportInfoDto> exportInfos) {
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        try (Workbook workbook = new XSSFWorkbook(file)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            int rowIndex = 1;
+
+            for (HistoryExportInfoDto info : exportInfos) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null) {
+
+                    row = sheet.createRow(rowIndex);
+
+                }
+
+                System.out.println(info.getCreatedAt());
+                row.createCell(0).setCellValue(rowIndex - 1);
+                row.createCell(1).setCellValue(info.getIp());
+                row.createCell(2).setCellValue(info.getRefeere());
+                row.createCell(3).setCellValue(info.getCreatedAt().format(formatter));
+                row.createCell(4).setCellValue(info.getPetInfo());
+                row.createCell(5).setCellValue(info.getPetName());
+                row.createCell(6).setCellValue(info.getPetAge());
+                row.createCell(7).setCellValue(info.getPetSpecies());
+                row.createCell(8).setCellValue(info.getMoreInfo());
+                row.createCell(9).setCellValue(info.getPhoneNumber());
+                rowIndex++;
+
+            }
+
+            // 파일을 저장할 위치를 시스템의 기본 임시 디렉토리로 설정
+            String tempDir = System.getProperty("java.io.tmpdir");
+            File outputFile = new File(tempDir + "/modified-" + file.getName());
+
+            try (FileOutputStream outputStream = new FileOutputStream(outputFile)) {
+                workbook.write(outputStream);
+            } finally {
+                workbook.close();
+            }
+
+            return new FileSystemResource(outputFile);
+
+        } catch(Exception e) {
+            System.out.println("다운로드 실패 " + e);
+            throw new ApiException(ErrorStatus._FILE_DOWNLOAD_FAILED);
+
+        }
+
+    }
+
+//    // 견적서 PDF 변환 후 다운로드
+//    @Override
+//    public Resource convertExcelToPdf(File excelFile) {
+//
+//        try(Workbook workbook = new XSSFWorkbook(excelFile)) {
+//
+//            List<BufferedImage> images = new ArrayList<>();
+//
+//            for (int i = 0; i < 3; i++) {
+//
+//                Sheet sheet = workbook.getSheetAt(i);
+//                CellRangeAddress range = new CellRangeAddress(2, 73, 5, 17); // F2 ~ V73
+//                BufferedImage img = convertRangeToImage(sheet, range);
+//
+//                images.add(img);
+//            }
+//
+//            // 이미지를 PDF로 변환
+//            File pdfFile = convertImagesToPdf(images);
+//
+//            return new FileSystemResource(pdfFile);
+//
+//        } catch (IOException e) {
+//            throw new ApiException(ErrorStatus._FILE_DOWNLOAD_FAILED);
+//        } catch (InvalidFormatException e) {
+//            throw new ApiException(ErrorStatus._FILE_INVALID_FORMAT);
+//        }
+//
+//    }
+
+    private PageResponse<EstimateListResponse> getEstimateListResponsePageResponse(Page<Estimate> estimateList) {
+
+        List<EstimateListResponse> estimateListResponses = estimateList.stream()
+                .map(estimates -> EstimateListResponse.builder()
+                        .estimateId(estimates.getId())
+                        .estimateIP(estimates.getIp())
+                        .estimateRefeere(estimates.getRefeere())
+                        .createdAt(estimates.getCreatedAt())
+                        .petInfo(estimates.getPetInfo())
+                        .petName(estimates.getPetName())
+                        .petSpecies(estimates.getPetSpecies())
+                        .moreInfo(estimates.getMoreInfo())
+                        .phoneNumber(estimates.getPhoneNumber())
+                        .build())
+                .toList();
+
+        Long totalCount = estimateRepository.estimateTotalCount();
+
+        return PageResponse.<EstimateListResponse>builder()
+                .listPageResponse(estimateListResponses)
+                .totalCount(totalCount)
+                .size(estimateListResponses.size())
+                .build();
+
+    }
+
     private void setSheet(XSSFWorkbook workbook, int setSheet, Estimate estimate) {
         XSSFSheet sheet = workbook.getSheetAt(setSheet);
         setValue(sheet, "C8", String.valueOf(estimate.getPetInfo()));
@@ -136,4 +364,191 @@ public class EstimateServiceImpl implements EstimateService {
         Estimate estimate = estimateServiceRequest.toEntity(estimateServiceRequest);
         return estimateRepository.save(estimate);
     }
+
+//    // Excel의 주어진 범위에 따라 이미지로 변환
+//    private BufferedImage convertRangeToImage(Sheet sheet, CellRangeAddress range) {
+//
+//        int imgWidth = 0;
+//        int imgHeight = 0;
+//
+//        for (int colNum = range.getFirstColumn(); colNum <= range.getLastColumn(); colNum++) {
+//            imgWidth += sheet.getColumnWidth(colNum) / 256 * 7; // Column width in points
+//        }
+//        for (int rowNum = range.getFirstRow(); rowNum <= range.getLastRow(); rowNum++) {
+//            Row row = sheet.getRow(rowNum);
+//            imgHeight += row.getHeight() / 20; // Row height in points
+//        }
+//
+//        BufferedImage img = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_RGB);
+//        Graphics2D g2 = img.createGraphics();
+//
+//        g2.setColor(Color.WHITE);
+//        g2.fillRect(0, 0, imgWidth, imgHeight);
+//
+//        for (int rowNum = range.getFirstRow(); rowNum <= range.getLastRow(); rowNum++) {
+//            Row row = sheet.getRow(rowNum);
+//            if (row == null) {
+//                continue;
+//            }
+//
+//            for (int colNum = range.getFirstColumn(); colNum <= range.getLastColumn(); colNum++) {
+//                Cell cell = row.getCell(colNum);
+//
+//                String cellValue;
+//                if (cell == null) {
+//                    System.out.println("Empty cell at Row: " + rowNum + ", Col: " + colNum);
+//                    cellValue = "";  // 빈 셀이라면 공백 문자열로 처리
+//                }
+//
+//                if (cell != null) {
+//                    switch (cell.getCellType()) {
+//                        case STRING:
+//                            cellValue = cell.getStringCellValue();
+//                            break;
+//                        case NUMERIC:
+//                            cellValue = String.valueOf(cell.getNumericCellValue());
+//                            break;
+//                        case BOOLEAN:
+//                            cellValue = String.valueOf(cell.getBooleanCellValue());
+//                            break;
+//                        case FORMULA:
+//                            cellValue = cell.getCellFormula();
+//                            break;
+//                        default:
+//                            cellValue = "";
+//                            break;
+//                    }
+//
+//                    CellStyle cellStyle = cell.getCellStyle();
+//                    Font excelFont = sheet.getWorkbook().getFontAt(cellStyle.getFontIndexAsInt());
+//
+//                    java.awt.Font awtFont = new java.awt.Font(
+//                            excelFont.getFontName(),
+//                            excelFont.getBold() ? java.awt.Font.BOLD : java.awt.Font.PLAIN,
+//                            excelFont.getFontHeightInPoints()
+//                    );
+//
+//                    g2.setFont(awtFont);
+//
+//                    FontRenderContext frc = g2.getFontRenderContext();
+//                    GlyphVector gv = awtFont.createGlyphVector(frc, cellValue);
+//                    int textWidth = (int) gv.getVisualBounds().getWidth();
+//                    int textHeight = (int) gv.getVisualBounds().getHeight();
+//
+//                    System.out.println("Text width: " + textWidth + ", Text height: " + textHeight);
+//
+//
+//                    int x = (colNum - range.getFirstColumn()) * 100 + (100 - textWidth) / 2;
+//                    int y = (rowNum - range.getFirstRow() + 1) * 20 - (20 - textHeight) / 2;
+//
+//                    System.out.println("Row: " + rowNum + ", Col: " + colNum + ", Value: " + cellValue);
+//
+//                    g2.drawString(cellValue, x, y);
+//                }
+//            }
+//        }
+//
+//        g2.dispose();
+//        return img;
+//    }
+
+
+    // 엑셀 시트를 스크린샷으로 캡처
+    private BufferedImage captureExcelScreenshot(Rectangle captureRect) throws AWTException {
+        Robot robot = new Robot();
+        return robot.createScreenCapture(captureRect);  // 전달받은 영역을 캡처
+    }
+
+    private File convertImagesToPdf(List<BufferedImage> images) throws IOException {
+        String tempDir = System.getProperty("java.io.tmpdir");
+        File pdfFile = new File(tempDir + "/converted.pdf");
+
+        PdfWriter writer = new PdfWriter(new FileOutputStream(pdfFile));
+        PdfDocument pdf = new PdfDocument(writer);
+        Document document = new Document(pdf);
+
+        for (BufferedImage img : images) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(img, "png", baos);
+            baos.flush();
+
+            Image pdfImage = new Image(com.itextpdf.io.image.ImageDataFactory.create(baos.toByteArray()));
+            pdfImage.setAutoScale(true);
+            document.add(pdfImage);
+
+            baos.close();
+        }
+
+        document.close();
+        return pdfFile;
+    }
+
+    // 엑셀 시트에서 주어진 범위를 캡처
+    private BufferedImage captureExcelRangeToImage(Sheet sheet, CellRangeAddress range) {
+        int imgWidth = 0;
+        int imgHeight = 0;
+
+        // 엑셀의 컬럼 너비와 행 높이를 계산
+        for (int colNum = range.getFirstColumn(); colNum <= range.getLastColumn(); colNum++) {
+            imgWidth += sheet.getColumnWidth(colNum) / 256 * 7; // Column width in pixels
+        }
+        for (int rowNum = range.getFirstRow(); rowNum <= range.getLastRow(); rowNum++) {
+            Row row = sheet.getRow(rowNum);
+            if (row != null) {
+                imgHeight += row.getHeight() / 20; // Row height in pixels
+            }
+        }
+
+        // 이미지 생성
+        BufferedImage img = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2 = img.createGraphics();
+        g2.setColor(Color.WHITE);
+        g2.fillRect(0, 0, imgWidth, imgHeight);
+
+        // 엑셀의 셀 내용을 이미지로 그리기
+        for (int rowNum = range.getFirstRow(); rowNum <= range.getLastRow(); rowNum++) {
+            Row row = sheet.getRow(rowNum);
+            if (row == null) continue;
+
+            for (int colNum = range.getFirstColumn(); colNum <= range.getLastColumn(); colNum++) {
+                Cell cell = row.getCell(colNum);
+
+                if (cell != null) {
+                    String cellValue = cell.toString();  // 셀의 내용을 가져옴
+                    int x = (colNum - range.getFirstColumn()) * 100;  // 컬럼 위치에 맞게 x 좌표 계산
+                    int y = (rowNum - range.getFirstRow()) * 20;  // 행 위치에 맞게 y 좌표 계산
+                    g2.drawString(cellValue, x, y);  // 셀 값을 이미지에 그림
+                }
+            }
+        }
+
+        g2.dispose();
+        return img;
+    }
+
+    // 엑셀 파일을 PDF로 변환
+    @Override
+    public Resource convertExcelToPdf(File excelFile) {
+        System.out.println("파일 변환 시작");
+        try (Workbook workbook = WorkbookFactory.create(excelFile)) {
+            List<BufferedImage> images = new ArrayList<>();
+
+            // 엑셀 시트에서 F2 ~ V73 범위를 캡처
+            for (int i = 0; i < 3; i++) {
+                Sheet sheet = workbook.getSheetAt(i);  // 첫 번째, 두 번째, 세 번째 시트
+                CellRangeAddress range = new CellRangeAddress(1, 72, 5, 17);  // F2 ~ V73 범위 지정
+                BufferedImage screenshot = captureExcelRangeToImage(sheet, range);  // 범위 캡처
+                images.add(screenshot);
+            }
+
+            // 이미지를 PDF로 변환
+            File pdfFile = convertImagesToPdf(images);
+            return new FileSystemResource(pdfFile);
+
+        } catch (IOException e) {
+            throw new RuntimeException("파일 변환 중 오류 발생", e);
+        }
+    }
+
+
 }
