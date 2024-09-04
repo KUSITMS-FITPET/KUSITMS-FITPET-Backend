@@ -13,6 +13,7 @@ import fitpet_be.common.PageResponse;
 import fitpet_be.domain.model.Admin;
 import fitpet_be.infrastructure.s3.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
@@ -99,6 +100,8 @@ public class AdminController {
 
     }
 
+    @Operation(summary = "Admin 견적서 수정", description = "견적서를 주어진 정보에 따라 수정합니다.")
+    @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
     @PatchMapping("/estimates/{estimateId}")
     public ApiResponse<String> updateEstimateAtAdmin(
             @PathVariable("estimateId") Long estimateId,
@@ -110,6 +113,7 @@ public class AdminController {
 
     }
 
+    @Operation(summary = "Admin History 추출", description = "History를 추출 후 다운로드합니다.")
     @PostMapping("/estimates/export")
     public ResponseEntity<Resource> exportHistory(@RequestBody EstimateHistoryExportRequest request)
             throws IOException {
@@ -117,8 +121,22 @@ public class AdminController {
         File file = s3Service.downloadFileFromS3("excels/OriginalSCExportFile.xlsx");
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"SCEstimateHistory\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"SCEstimateHistory.xlsx\"")
                 .body(estimateService.exportHistory(file, request.getExportInfoDtoList()));
+
+    }
+
+    @Operation(summary = "Admin 견적서 다운받기", description = "견적서를 pdf 파일로 다운로드합니다.")
+    @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
+    @GetMapping("/estimates/{estimateId}")
+    public ResponseEntity<Resource> downloadEstimatePdf(@PathVariable("estimateId") Long estimateId) throws IOException {
+
+//        File file = s3Service.downloadFileFromS3("estimates/" + estimateService.getEstimateFileName(estimateId));
+        File file = s3Service.downloadFileFromS3("estimates/010-0902-9820_2024-09-02T20:59:45.752952.xlsx");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"converted.pdf\"")
+                .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
+                .body(estimateService.convertExcelToPdf(file));
 
     }
 

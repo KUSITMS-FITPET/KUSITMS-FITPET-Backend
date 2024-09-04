@@ -1,4 +1,5 @@
 package fitpet_be.application.serviceImpl;
+import com.itextpdf.io.image.ImageDataFactory;
 import fitpet_be.application.dto.EstimateUploadDto;
 import fitpet_be.application.dto.HistoryExportInfoDto;
 import fitpet_be.application.dto.request.EstimateSearchRequest;
@@ -14,18 +15,37 @@ import fitpet_be.domain.model.Cardnews;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import com.itextpdf.layout.element.Image;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -57,6 +77,16 @@ public class EstimateServiceImpl implements EstimateService {
     public void createEstimateService(EstimateServiceRequest estimateServiceRequest) throws IOException {
         Estimate saveEstimate = saveEstimate(estimateServiceRequest);
         uploadEstimate(saveEstimate);
+    }
+
+    @Override
+    public String getEstimateFileName(Long estimateId) {
+
+        Estimate estimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
+
+        return estimate.getPhoneNumber() + "_" + estimate.getCreatedAt() + ".xlsx";
+
     }
 
     @Override
@@ -199,6 +229,7 @@ public class EstimateServiceImpl implements EstimateService {
     @Override
     public Resource exportHistory(File file, List<HistoryExportInfoDto> exportInfos) {
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         try (Workbook workbook = new XSSFWorkbook(file)) {
 
@@ -214,16 +245,17 @@ public class EstimateServiceImpl implements EstimateService {
 
                 }
 
+                System.out.println(info.getCreatedAt());
                 row.createCell(0).setCellValue(rowIndex - 1);
                 row.createCell(1).setCellValue(info.getIp());
                 row.createCell(2).setCellValue(info.getRefeere());
-                row.createCell(3).setCellValue(info.getCreatedAt());
+                row.createCell(3).setCellValue(info.getCreatedAt().format(formatter));
                 row.createCell(4).setCellValue(info.getPetInfo());
                 row.createCell(5).setCellValue(info.getPetName());
-                row.createCell(9).setCellValue(info.getPetAge());
-                row.createCell(6).setCellValue(info.getPetSpecies());
-                row.createCell(7).setCellValue(info.getMoreInfo());
-                row.createCell(8).setCellValue(info.getPhoneNumber());
+                row.createCell(6).setCellValue(info.getPetAge());
+                row.createCell(7).setCellValue(info.getPetSpecies());
+                row.createCell(8).setCellValue(info.getMoreInfo());
+                row.createCell(9).setCellValue(info.getPhoneNumber());
                 rowIndex++;
 
             }
@@ -244,6 +276,36 @@ public class EstimateServiceImpl implements EstimateService {
             System.out.println("다운로드 실패 " + e);
             throw new ApiException(ErrorStatus._FILE_DOWNLOAD_FAILED);
 
+        }
+
+    }
+
+    // 견적서 PDF 변환 후 다운로드
+    @Override
+    public Resource convertExcelToPdf(File excelFile) {
+
+        try(Workbook workbook = new XSSFWorkbook(excelFile)) {
+
+            List<BufferedImage> images = new ArrayList<>();
+
+            for (int i = 0; i < 3; i++) {
+
+                Sheet sheet = workbook.getSheetAt(i);
+                CellRangeAddress range = new CellRangeAddress(1, 72, 5, 21); // F22 ~ V 73
+                BufferedImage img = convertRangeToImage(sheet, range);
+
+                images.add(img);
+            }
+
+            // 이미지를 PDF로 변환
+            File pdfFile = convertImagesToPdf(images);
+
+            return new FileSystemResource(pdfFile);
+
+        } catch (IOException e) {
+            throw new ApiException(ErrorStatus._FILE_DOWNLOAD_FAILED);
+        } catch (InvalidFormatException e) {
+            throw new ApiException(ErrorStatus._FILE_INVALID_FORMAT);
         }
 
     }
@@ -297,4 +359,105 @@ public class EstimateServiceImpl implements EstimateService {
         Estimate estimate = estimateServiceRequest.toEntity(estimateServiceRequest);
         return estimateRepository.save(estimate);
     }
+
+    // Excel의 주어진 범위에 따라 이미지로 변환
+    private BufferedImage convertRangeToImage(Sheet sheet, CellRangeAddress range) {
+
+        int imgWidth = (range.getLastColumn() - range.getFirstColumn() + 1) * 100;
+        int imgHeight = (range.getLastRow() - range.getFirstRow() + 1) * 20;
+
+        BufferedImage img = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2 = img.createGraphics();
+
+        g2.setColor(Color.WHITE);
+        g2.fillRect(0, 0, imgWidth, imgHeight);
+
+        for (int rowNum = range.getFirstRow(); rowNum <= range.getLastRow(); rowNum++) {
+            Row row = sheet.getRow(rowNum);
+            if (row == null) {
+                continue;
+            }
+
+            for (int colNum = range.getFirstColumn(); colNum <= range.getLastColumn(); colNum++) {
+                Cell cell = row.getCell(colNum);
+                String cellValue = "";
+
+                if (cell != null) {
+                    switch (cell.getCellType()) {
+                        case STRING:
+                            cellValue = cell.getStringCellValue();
+                            break;
+                        case NUMERIC:
+                            cellValue = String.valueOf(cell.getNumericCellValue());
+                            break;
+                        case BOOLEAN:
+                            cellValue = String.valueOf(cell.getBooleanCellValue());
+                            break;
+                        case FORMULA:
+                            cellValue = cell.getCellFormula();
+                            break;
+                        default:
+                            cellValue = "";
+                            break;
+                    }
+
+                    CellStyle cellStyle = cell.getCellStyle();
+                    Font excelFont = sheet.getWorkbook().getFontAt(cellStyle.getFontIndexAsInt());
+
+                    java.awt.Font awtFont = new java.awt.Font(
+                            excelFont.getFontName(),
+                            excelFont.getBold() ? java.awt.Font.BOLD : java.awt.Font.PLAIN,
+                            excelFont.getFontHeightInPoints()
+                    );
+
+                    g2.setFont(awtFont);
+
+                    FontRenderContext frc = g2.getFontRenderContext();
+                    GlyphVector gv = awtFont.createGlyphVector(frc, cellValue);
+                    int textWidth = (int) gv.getVisualBounds().getWidth();
+                    int textHeight = (int) gv.getVisualBounds().getHeight();
+
+                    int x = (colNum - range.getFirstColumn()) * 100 + (100 - textWidth) / 2;
+                    int y = (rowNum - range.getFirstRow() + 1) * 20 - (20 - textHeight) / 2;
+
+                    g2.drawString(cellValue, x, y);
+                }
+            }
+        }
+
+        g2.dispose();
+        return img;
+    }
+
+
+    // 이미지를 PDF로 변환
+    private File convertImagesToPdf(List<BufferedImage> images) throws IOException {
+
+        String tempDir = System.getProperty("java.io.tmpdir");
+        File pdfFile = new File(tempDir + "/converted.pdf");
+
+        PdfWriter writer = new PdfWriter(new FileOutputStream(pdfFile));
+        PdfDocument pdf = new PdfDocument(writer);
+        Document document = new Document(pdf);
+
+        for (BufferedImage img : images) {
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(img, "png", baos);
+            baos.flush();
+
+            Image pdfImage = new Image(com.itextpdf.io.image.ImageDataFactory.create(baos.toByteArray()));
+            pdfImage.setAutoScale(true);
+            document.add(pdfImage);
+
+            baos.close();
+
+        }
+
+        document.close();
+
+        return pdfFile;
+
+    }
+
 }

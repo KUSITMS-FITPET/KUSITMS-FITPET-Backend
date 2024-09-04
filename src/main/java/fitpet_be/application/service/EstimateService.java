@@ -28,4 +28,8 @@ public interface EstimateService {
 
     Resource exportHistory(File file, List<HistoryExportInfoDto> exportInfos);
 
+    String getEstimateFileName(Long estimateId);
+
+    Resource convertExcelToPdf(File excelFile);
+
 }
