@@ -7,6 +7,7 @@ import fitpet_be.application.service.AdminService;
 import fitpet_be.common.ApiResponse;
 import fitpet_be.domain.model.Admin;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -44,6 +45,8 @@ public class AdminController {
 
     }
 
+    @Operation(summary = "Admin 삭제", description = "기존 Admin을 삭제합니다")
+    @Parameter(name = "adminId", description = "관리자 ID", required = true, example = "admin1")
     @DeleteMapping("/delete/{adminId}")
     public ApiResponse<String> deleteAdmin(@PathVariable String adminId, HttpServletRequest request) {
 
