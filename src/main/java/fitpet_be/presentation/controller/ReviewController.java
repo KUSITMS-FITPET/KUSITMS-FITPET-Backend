@@ -1,5 +1,6 @@
 package fitpet_be.presentation.controller;
 
+import fitpet_be.application.dto.request.ReviewFilterRequest;
 import fitpet_be.application.dto.request.ReviewServiceRequest;
 import fitpet_be.application.dto.response.ReviewDetailsResponse;
 import fitpet_be.application.dto.response.ReviewListResponse;
@@ -26,27 +27,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReviewController {
 
     private final ReviewService reviewService;
-    @Operation(summary = "리뷰 조회", description = "리뷰를 최신 순으로 조회합니다")
-    @GetMapping("/desc")
-    public ApiResponse<PageResponse<ReviewListResponse>> getReviewsDesc(
-        @RequestParam("page") int page,
-        @RequestParam(value = "size", defaultValue = "9") int size) {
+
+    @Operation(summary = "리뷰 조회", description = "필터링 조건에 따라 리뷰를 조회합니다.")
+    @GetMapping()
+    public ApiResponse<PageResponse<ReviewListResponse>> getReviewsFilter(
+            @RequestParam("page") int page,
+            @RequestParam(value = "size", defaultValue = "9") int size,
+            @RequestBody ReviewFilterRequest request) {
 
         Pageable pageable = PageRequest.of(page -1, size);
 
-        return ApiResponse.onSuccess(reviewService.getReviewListDesc(pageable));
-
-    }
-
-    @Operation(summary = "리뷰 조회", description = "리뷰를 오래된 순으로 조회합니다")
-    @GetMapping("/asc")
-    public ApiResponse<PageResponse<ReviewListResponse>> getReviewsAsc(
-        @RequestParam("page") int page,
-        @RequestParam(value = "size", defaultValue = "9") int size) {
-
-        Pageable pageable = PageRequest.of(page -1, size);
-
-        return ApiResponse.onSuccess(reviewService.getReviewListAsc(pageable));
+        return ApiResponse.onSuccess(reviewService.getReviewsFilter(request, pageable));
 
     }
 

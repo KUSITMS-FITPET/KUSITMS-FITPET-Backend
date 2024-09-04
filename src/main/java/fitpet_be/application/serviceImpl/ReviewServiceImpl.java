@@ -1,5 +1,6 @@
 package fitpet_be.application.serviceImpl;
 
+import fitpet_be.application.dto.request.ReviewFilterRequest;
 import fitpet_be.application.dto.request.ReviewServiceRequest;
 import fitpet_be.application.dto.response.ReviewDetailsResponse;
 import fitpet_be.application.dto.response.ReviewListResponse;
@@ -10,9 +11,12 @@ import fitpet_be.common.PageResponse;
 import fitpet_be.domain.model.Review;
 import fitpet_be.domain.repository.ReviewRepository;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,18 +27,39 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
 
     @Override
-    public PageResponse<ReviewListResponse> getReviewListDesc(Pageable pageable) {
-        Page<Review> reviewsList = reviewRepository.findAllByOrderByDesc(pageable);
+    public PageResponse<ReviewListResponse> getReviewsFilter(ReviewFilterRequest request, Pageable pageable) {
 
-        return getReviewListResponsePageResponse(reviewsList);
+        return getReviewListResponsePageResponse(getReviewPageByPetInfo(request, pageable));
+
     }
 
-    @Override
-    public PageResponse<ReviewListResponse> getReviewListAsc(Pageable pageable) {
-        Page<Review> reviewsList = reviewRepository.findAllByOrderByAsc(pageable);
+    private Page<Review> getReviewPageByPetInfo(ReviewFilterRequest request, Pageable pageable) {
+        String orderBy = request.getOrderBy();
+        boolean isDog = request.isDog();
+        boolean isCat = request.isCat();
+        String petInfo = null;
 
-        return getReviewListResponsePageResponse(reviewsList);
+        if (isDog && !isCat) {
+            petInfo = "고양이";  // 고양이 리뷰를 필터링
+        } else if (isCat && !isDog) {
+            petInfo = "강아지";  // 강아지 리뷰를 필터링
+        }
+
+        Sort sort = Sort.by("createdAt").descending();  // 기본 최신순 정렬
+
+        if (!Objects.equals(orderBy, "최신순")) {
+            sort = Sort.by("star").descending();  // 별점 순으로 정렬
+        }
+
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+        if (petInfo != null) {
+            return reviewRepository.findAllByPetInfo(petInfo, sortedPageable);
+        } else {
+            return reviewRepository.findAll(sortedPageable);
+        }
     }
+
 
     private PageResponse<ReviewListResponse> getReviewListResponsePageResponse(
         Page<Review> reviewsList) {
