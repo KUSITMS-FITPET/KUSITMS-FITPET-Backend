@@ -126,13 +126,26 @@ public class AdminController {
 
     }
 
-    @Operation(summary = "Admin 견적서 다운받기", description = "견적서를 pdf 파일로 다운로드합니다.")
-    @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
-    @GetMapping("/estimates/{estimateId}")
-    public ResponseEntity<Resource> downloadEstimatePdf(@PathVariable("estimateId") Long estimateId) throws IOException {
+//    @Operation(summary = "Admin 견적서 다운받기", description = "견적서를 pdf 파일로 다운로드합니다.")
+//    @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
+//    @GetMapping("/estimates/{estimateId}")
+//    public ResponseEntity<Resource> downloadEstimatePdf(@PathVariable("estimateId") Long estimateId) throws IOException {
+//
+////        File file = s3Service.downloadFileFromS3("estimates/" + estimateService.getEstimateFileName(estimateId));
+//        File file = s3Service.downloadFileFromS3("estimates/289045a6-6045-4761-8044-7678e8deeaac.xlsx");
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"converted.pdf\"")
+//                .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
+//                .body(estimateService.convertExcelToPdf(file));
+//
+//    }
+
+
+    @GetMapping("/estimates/test")
+    public ResponseEntity<Resource> downloadEstimatePdf() throws IOException {
 
 //        File file = s3Service.downloadFileFromS3("estimates/" + estimateService.getEstimateFileName(estimateId));
-        File file = s3Service.downloadFileFromS3("estimates/010-0902-9820_2024-09-02T20:59:45.752952.xlsx");
+        File file = s3Service.downloadFileFromS3("estimates/01041023041_2024-09-03T19:39:15.272190700.xlsx");
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"converted.pdf\"")
                 .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
