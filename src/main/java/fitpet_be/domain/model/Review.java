@@ -35,7 +35,7 @@ public class Review extends BaseTimeEntity {
     @Column(name = "review_content", nullable = false)
     private String content;
 
-    @Column(name = "review_start", nullable = false)
+    @Column(name = "review_star", nullable = false)
     private Integer star;
 
     @Builder

@@ -10,12 +10,10 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ReviewRepository extends JpaReviewRepository {
 
-    @Query("SELECT r FROM Review r ORDER BY r.createdAt DESC ")
-    Page<Review> findAllByOrderByDesc(Pageable pageable);
+    Page<Review> findAll(Pageable pageable);
 
+    Page<Review> findAllByPetInfo(@Param("petInfo") String petInfo, Pageable pageable);
 
-    @Query("SELECT r FROM Review r ORDER BY r.createdAt ASC ")
-    Page<Review> findAllByOrderByAsc(Pageable pageable);
 
     @Query("SELECT count(r) FROM Review r")
     Long reviewsTotalCount();
