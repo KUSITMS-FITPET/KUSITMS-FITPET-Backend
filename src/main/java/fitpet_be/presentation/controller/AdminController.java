@@ -170,7 +170,7 @@ public class AdminController {
 
     @Operation(summary = "Admin 견적서 다운받기", description = "견적서를 pdf 파일로 다운로드합니다.")
     @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
-    @PostMapping("/estimate/convert/{estimateId}")
+    @PostMapping("/estimates/convert/{estimateId}")
     public ResponseEntity<String> convertExcelToPdf(@PathVariable("estimateId") Long estimateId) throws IOException {
         try {
             // 1. S3에서 파일 다운로드
