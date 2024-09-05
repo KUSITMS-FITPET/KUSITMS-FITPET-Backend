@@ -189,16 +189,16 @@ public class AdminController {
         }
     }
 
-    @Operation(summary = "Admin 견적서 다운받기2222", description = "견적서를 pdf 파일로 다운로드합니다.")
-    @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
-    @PostMapping("/estimates/converts/{estimateId}")
-    public ResponseEntity<String> convertExcelToPdfs(@PathVariable("estimateId") Long estimateId) throws IOException {
-        try {
-            return new ResponseEntity<>("PDF 파일이 성공적으로 생성되었습니다: " + estimateService.convertExcelToPdfs(estimateId), HttpStatus.OK);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>("파일 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+//    @Operation(summary = "Admin 견적서 다운받기2222", description = "견적서를 pdf 파일로 다운로드합니다.")
+//    @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
+//    @PostMapping("/estimates/converts/{estimateId}")
+//    public ResponseEntity<String> convertExcelToPdfs(@PathVariable("estimateId") Long estimateId) throws IOException {
+//        try {
+//            return new ResponseEntity<>("PDF 파일이 성공적으로 생성되었습니다: " + estimateService.convertExcelToPdfs(estimateId), HttpStatus.OK);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return new ResponseEntity<>("파일 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
 
 }

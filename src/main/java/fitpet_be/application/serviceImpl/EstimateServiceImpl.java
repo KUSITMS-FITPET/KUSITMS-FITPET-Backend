@@ -261,118 +261,27 @@ public class EstimateServiceImpl implements EstimateService {
 
     }
 
-//    @Override
-//    public String convertExcelToPdf(String excelFilePath, String pdfFilePath, String excelFileName) {
-//        String s3Url = null;
-//        try {
-//            // 파이썬 스크립트 실행
-//            ProcessBuilder pb = new ProcessBuilder("/app/venv/bin/python3", "/app/script.py", excelFilePath, pdfFilePath, excelFileName);
-//            Process process = pb.start();
-//
-//            // 파이썬 출력 읽기
-//            BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-//            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-//
-//            String line;
-//            while ((line = outputReader.readLine()) != null) {
-//                // Capture S3 URL if the script returns it
-//                if (line.startsWith("s3_url:")) {
-//                    s3Url = line.substring(7);
-//                }
-//                System.out.println("STDOUT: " + line);
-//            }
-//
-//            while ((line = errorReader.readLine()) != null) {
-//                System.err.println("STDERR: " + line);
-//            }
-//
-//            int exitCode = process.waitFor();
-//            if (exitCode == 0 && s3Url != null) {
-//                System.out.println("Excel file successfully converted to PDF and uploaded to S3. URL: " + s3Url);
-//            } else {
-//                System.out.println("An error occurred during the conversion or upload.");
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        // Return the captured S3 URL (or null if there was an issue)
-//        return s3Url;
-//    }
-
     @Override
     public String convertExcelToPdf(String excelFilePath, String pdfFilePath, String excelFileName) {
         String s3Url = null;
         try {
-            // Python 스크립트 실행을 위한 ProcessBuilder 설정
+            // 파이썬 스크립트 실행
             ProcessBuilder pb = new ProcessBuilder("/app/venv/bin/python3", "/app/script.py", excelFilePath, pdfFilePath, excelFileName);
             Process process = pb.start();
 
-            // Python 스크립트 실행 결과를 읽기 위한 BufferedReader
+            // 파이썬 출력 읽기
             BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            String line;
 
-            // 표준 출력(STDOUT)에서 S3 URL을 찾음
-            while ((line = outputReader.readLine()) != null) {
-                if (line.startsWith("s3_url:")) {
-                    s3Url = line.substring(7);  // "s3_url:" 이후의 URL 부분만 가져옴
-                }
-                System.out.println("STDOUT: " + line);
-            }
-
-            // 표준 에러 출력(STDERR) 확인
-            while ((line = errorReader.readLine()) != null) {
-                System.err.println("STDERR: " + line);
-            }
-
-            // Python 스크립트가 성공적으로 실행되었는지 확인
-            int exitCode = process.waitFor();
-            if (exitCode == 0 && s3Url != null) {
-                System.out.println("PDF 파일이 성공적으로 생성되고 S3에 업로드되었습니다. URL: " + s3Url);
-
-                // 변환이 성공적으로 완료된 후 엑셀 파일 삭제
-                File excelFile = new File(excelFilePath);
-                if (excelFile.exists() && excelFile.delete()) {
-                    System.out.println("Temporary Excel file deleted: " + excelFilePath);
-                } else {
-                    System.err.println("Failed to delete temporary Excel file: " + excelFilePath);
-                }
-            } else {
-                System.err.println("PDF 변환 중 오류가 발생했습니다.");
-            }
-
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // S3 URL 반환 (PDF 변환에 성공한 경우), 실패 시 null 반환
-        return s3Url;
-    }
-
-    @Override
-    public String convertExcelToPdfs(Long estimateId) {
-        String s3Url = null;
-        try {
-            // S3에서 파일 다운로드
-            File excelFile = s3Service.downloadFileFromS3("estimates/" + getEstimateFileName(estimateId));
-            String excelFilePath = "/app/" + excelFile.getName();
-            String pdfFilePath = excelFilePath.replace(".xlsx", ".pdf");
-
-            // Python 스크립트 실행 (ProcessBuilder 사용)
-            ProcessBuilder pb = new ProcessBuilder("/app/venv/bin/python3", "/app/script.py", excelFilePath, pdfFilePath, excelFile.getName());
-            Process process = pb.start();
-
-            // Python 스크립트 출력 및 에러 확인
-            BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             String line;
             while ((line = outputReader.readLine()) != null) {
+                // Capture S3 URL if the script returns it
                 if (line.startsWith("s3_url:")) {
                     s3Url = line.substring(7);
                 }
                 System.out.println("STDOUT: " + line);
             }
+
             while ((line = errorReader.readLine()) != null) {
                 System.err.println("STDERR: " + line);
             }
@@ -380,23 +289,114 @@ public class EstimateServiceImpl implements EstimateService {
             int exitCode = process.waitFor();
             if (exitCode == 0 && s3Url != null) {
                 System.out.println("Excel file successfully converted to PDF and uploaded to S3. URL: " + s3Url);
-
-                // 변환 후 엑셀 파일 삭제
-                if (excelFile.delete()) {
-                    System.out.println("Temporary Excel file deleted: " + excelFile.getAbsolutePath());
-                } else {
-                    System.out.println("Failed to delete temporary Excel file: " + excelFile.getAbsolutePath());
-                }
             } else {
                 System.out.println("An error occurred during the conversion or upload.");
             }
-
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return s3Url;  // PDF 파일의 S3 URL 반환
+        // Return the captured S3 URL (or null if there was an issue)
+        return s3Url;
     }
+
+//    @Override
+//    public String convertExcelToPdf(String excelFilePath, String pdfFilePath, String excelFileName) {
+//        String s3Url = null;
+//        try {
+//            // Python 스크립트 실행을 위한 ProcessBuilder 설정
+//            ProcessBuilder pb = new ProcessBuilder("/app/venv/bin/python3", "/app/script.py", excelFilePath, pdfFilePath, excelFileName);
+//            Process process = pb.start();
+//
+//            // Python 스크립트 실행 결과를 읽기 위한 BufferedReader
+//            BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+//            String line;
+//
+//            // 표준 출력(STDOUT)에서 S3 URL을 찾음
+//            while ((line = outputReader.readLine()) != null) {
+//                if (line.startsWith("s3_url:")) {
+//                    s3Url = line.substring(7);  // "s3_url:" 이후의 URL 부분만 가져옴
+//                }
+//                System.out.println("STDOUT: " + line);
+//            }
+//
+//            // 표준 에러 출력(STDERR) 확인
+//            while ((line = errorReader.readLine()) != null) {
+//                System.err.println("STDERR: " + line);
+//            }
+//
+//            // Python 스크립트가 성공적으로 실행되었는지 확인
+//            int exitCode = process.waitFor();
+//            if (exitCode == 0 && s3Url != null) {
+//                System.out.println("PDF 파일이 성공적으로 생성되고 S3에 업로드되었습니다. URL: " + s3Url);
+//
+//                // 변환이 성공적으로 완료된 후 엑셀 파일 삭제
+//                File excelFile = new File(excelFilePath);
+//                if (excelFile.exists() && excelFile.delete()) {
+//                    System.out.println("Temporary Excel file deleted: " + excelFilePath);
+//                } else {
+//                    System.err.println("Failed to delete temporary Excel file: " + excelFilePath);
+//                }
+//            } else {
+//                System.err.println("PDF 변환 중 오류가 발생했습니다.");
+//            }
+//
+//        } catch (IOException | InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//
+//        // S3 URL 반환 (PDF 변환에 성공한 경우), 실패 시 null 반환
+//        return s3Url;
+//    }
+//
+//    @Override
+//    public String convertExcelToPdfs(Long estimateId) {
+//        String s3Url = null;
+//        try {
+//            // S3에서 파일 다운로드
+//            File excelFile = s3Service.downloadFileFromS3("estimates/" + getEstimateFileName(estimateId));
+//            String excelFilePath = "/app/" + excelFile.getName();
+//            String pdfFilePath = excelFilePath.replace(".xlsx", ".pdf");
+//
+//            // Python 스크립트 실행 (ProcessBuilder 사용)
+//            ProcessBuilder pb = new ProcessBuilder("/app/venv/bin/python3", "/app/script.py", excelFilePath, pdfFilePath, excelFile.getName());
+//            Process process = pb.start();
+//
+//            // Python 스크립트 출력 및 에러 확인
+//            BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+//            String line;
+//            while ((line = outputReader.readLine()) != null) {
+//                if (line.startsWith("s3_url:")) {
+//                    s3Url = line.substring(7);
+//                }
+//                System.out.println("STDOUT: " + line);
+//            }
+//            while ((line = errorReader.readLine()) != null) {
+//                System.err.println("STDERR: " + line);
+//            }
+//
+//            int exitCode = process.waitFor();
+//            if (exitCode == 0 && s3Url != null) {
+//                System.out.println("Excel file successfully converted to PDF and uploaded to S3. URL: " + s3Url);
+//
+//                // 변환 후 엑셀 파일 삭제
+//                if (excelFile.delete()) {
+//                    System.out.println("Temporary Excel file deleted: " + excelFile.getAbsolutePath());
+//                } else {
+//                    System.out.println("Failed to delete temporary Excel file: " + excelFile.getAbsolutePath());
+//                }
+//            } else {
+//                System.out.println("An error occurred during the conversion or upload.");
+//            }
+//
+//        } catch (IOException | InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return s3Url;  // PDF 파일의 S3 URL 반환
+//    }
 
     private PageResponse<EstimateListResponse> getEstimateListResponsePageResponse(Page<Estimate> estimateList) {
 
