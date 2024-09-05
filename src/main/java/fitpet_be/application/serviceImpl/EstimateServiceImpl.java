@@ -291,7 +291,7 @@ public class EstimateServiceImpl implements EstimateService {
     public void convertExcelToPdf(String excelFilePath, String pdfFilePath) {
         try {
             // 파이썬 스크립트 실행
-            ProcessBuilder pb = new ProcessBuilder("python", "/app/script.py", excelFilePath, pdfFilePath);
+            ProcessBuilder pb = new ProcessBuilder("/usr/bin/python3", "/app/script.py", excelFilePath, pdfFilePath);
             Process process = pb.start();
 
             // 파이썬 출력 읽기
@@ -324,6 +324,7 @@ public class EstimateServiceImpl implements EstimateService {
                         .petInfo(estimates.getPetInfo())
                         .petName(estimates.getPetName())
                         .petSpecies(estimates.getPetSpecies())
+                        .petAge(estimates.getPetAge())
                         .moreInfo(estimates.getMoreInfo())
                         .phoneNumber(estimates.getPhoneNumber())
                         .build())

@@ -29,7 +29,7 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @Operation(summary = "리뷰 조회", description = "필터링 조건에 따라 리뷰를 조회합니다.")
-    @GetMapping()
+    @PostMapping("/filter")
     public ApiResponse<PageResponse<ReviewListResponse>> getReviewsFilter(
             @RequestParam("page") int page,
             @RequestParam(value = "size", defaultValue = "9") int size,
