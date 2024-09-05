@@ -29,6 +29,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -167,31 +168,27 @@ public class AdminController {
 
     }
 
-//    @Operation(summary = "Admin 견적서 다운받기", description = "견적서를 pdf 파일로 다운로드합니다.")
-//    @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
-//    @GetMapping("/estimates/{estimateId}")
-//    public ResponseEntity<Resource> downloadEstimatePdf(@PathVariable("estimateId") Long estimateId) throws IOException {
-//
-////        File file = s3Service.downloadFileFromS3("estimates/" + estimateService.getEstimateFileName(estimateId));
-//        File file = s3Service.downloadFileFromS3("estimates/289045a6-6045-4761-8044-7678e8deeaac.xlsx");
-//        return ResponseEntity.ok()
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"converted.pdf\"")
-//                .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
-//                .body(estimateService.convertExcelToPdf(file));
-//
-//    }
+    @Operation(summary = "Admin 견적서 다운받기", description = "견적서를 pdf 파일로 다운로드합니다.")
+    @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
+    @PostMapping("/estimate/convert/{estimateId}")
+    public ResponseEntity<String> convertExcelToPdf(@PathVariable("estimateId") Long estimateId) throws IOException {
+        try {
+            // 1. S3에서 파일 다운로드
+            File excelFile = s3Service.downloadFileFromS3("estimates/" + estimateService.getEstimateFileName(estimateId));
 
+            // 2. 다운로드된 파일을 Docker 컨테이너의 /app 디렉터리로 저장
+            String excelFilePath = "/app/" + excelFile.getName();
+            String pdfFilePath = excelFilePath.replace(".xlsx", ".pdf");
 
-    @GetMapping("/estimates/test")
-    public ResponseEntity<Resource> downloadEstimatePdf() throws IOException {
+            // 3. Python 스크립트 실행 (엑셀 파일을 PDF로 변환)
+            estimateService.convertExcelToPdf(excelFilePath, pdfFilePath);
 
-//        File file = s3Service.downloadFileFromS3("estimates/" + estimateService.getEstimateFileName(estimateId));
-        File file = s3Service.downloadFileFromS3("estimates/01041023041_2024-09-03T19:39:15.272190700.xlsx"); //test용 S3에서 파일 하나 지정했음
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"converted.pdf\"") //converted 실사용 때는 fileName으로 변경
-                .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
-                .body(estimateService.convertExcelToPdf(file));
-
+            // 4. PDF 파일이 성공적으로 생성되었으면 PDF 파일 경로 반환
+            return new ResponseEntity<>("PDF 파일이 성공적으로 생성되었습니다: " + pdfFilePath, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("파일 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }

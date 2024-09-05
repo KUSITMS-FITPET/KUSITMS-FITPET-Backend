@@ -30,6 +30,6 @@ public interface EstimateService {
 
     String getEstimateFileName(Long estimateId);
 
-    Resource convertExcelToPdf(File excelFile);
+    void convertExcelToPdf(String excelFilePath, String pdfFilePath);
 
 }

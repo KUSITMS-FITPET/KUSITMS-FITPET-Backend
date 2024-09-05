@@ -1,0 +1,6 @@
+pandas
+openpyxl
+fpdf
+aspose-cells
+
+boto3
