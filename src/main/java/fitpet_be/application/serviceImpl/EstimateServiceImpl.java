@@ -288,28 +288,38 @@ public class EstimateServiceImpl implements EstimateService {
     }
 
     @Override
-    public void convertExcelToPdf(String excelFilePath, String pdfFilePath) {
+    public String convertExcelToPdf(String excelFilePath, String pdfFilePath) {
+        String s3Url = null;
         try {
             // 파이썬 스크립트 실행
-            ProcessBuilder pb = new ProcessBuilder("python", "/app/script.py", excelFilePath, pdfFilePath);
+            ProcessBuilder pb = new ProcessBuilder("python", "/app/script.py", excelFilePath,
+                pdfFilePath);
             Process process = pb.start();
 
             // 파이썬 출력 읽기
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream()));
             String line;
+            s3Url = null;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+                // Capture S3 URL if the script returns it
+                if (line.startsWith("s3_url:")) {
+                    s3Url = line.substring(7);
+                }
             }
 
             int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                System.out.println("엑셀 파일이 PDF로 성공적으로 변환되었습니다.");
+            if (exitCode == 0 && s3Url != null) {
+                System.out.println(
+                    "Excel file successfully converted to PDF and uploaded to S3. URL: " + s3Url);
             } else {
-                System.out.println("엑셀 파일 변환 중 오류 발생.");
+                System.out.println("An error occurred during the conversion or upload.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        return s3Url;
     }
 
 

@@ -174,7 +174,8 @@ public class AdminController {
     public ResponseEntity<String> convertExcelToPdf(@PathVariable("estimateId") Long estimateId) throws IOException {
         try {
             // 1. S3에서 파일 다운로드
-            File excelFile = s3Service.downloadFileFromS3("estimates/" + estimateService.getEstimateFileName(estimateId));
+            //File excelFile = s3Service.downloadFileFromS3("estimates/" + estimateService.getEstimateFileName(estimateId));
+            File excelFile = s3Service.downloadFileFromS3("estimates/string_2024-09-03T18:02:20.732563044.xlsx");
 
             // 2. 다운로드된 파일을 Docker 컨테이너의 /app 디렉터리로 저장
             String excelFilePath = "/app/" + excelFile.getName();
@@ -184,7 +185,7 @@ public class AdminController {
             estimateService.convertExcelToPdf(excelFilePath, pdfFilePath);
 
             // 4. PDF 파일이 성공적으로 생성되었으면 PDF 파일 경로 반환
-            return new ResponseEntity<>("PDF 파일이 성공적으로 생성되었습니다: " + pdfFilePath, HttpStatus.OK);
+            return new ResponseEntity<>("PDF 파일이 성공적으로 생성되었습니다: " + estimateService.convertExcelToPdf(excelFilePath, pdfFilePath), HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>("파일 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
