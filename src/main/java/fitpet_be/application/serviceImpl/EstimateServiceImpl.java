@@ -1,57 +1,31 @@
 package fitpet_be.application.serviceImpl;
-import com.itextpdf.io.image.ImageDataFactory;
 import fitpet_be.application.dto.EstimateUploadDto;
 import fitpet_be.application.dto.HistoryExportInfoDto;
 import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.application.dto.request.EstimateServiceRequest;
 import fitpet_be.application.dto.request.EstimateUpdateRequest;
-import fitpet_be.application.dto.response.CardnewsListResponse;
 import fitpet_be.application.dto.response.EstimateListResponse;
 import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.EstimateService;
 import fitpet_be.common.ErrorStatus;
 import fitpet_be.common.PageResponse;
-import fitpet_be.domain.model.Cardnews;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
-import java.awt.AWTException;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import com.itextpdf.layout.element.Image;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.Toolkit;
-import java.awt.font.FontRenderContext;
-import java.awt.font.GlyphVector;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
-import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -288,29 +262,44 @@ public class EstimateServiceImpl implements EstimateService {
     }
 
     @Override
-    public void convertExcelToPdf(String excelFilePath, String pdfFilePath) {
+    public String convertExcelToPdf(String excelFilePath, String pdfFilePath, String excelFileName) {
+        String s3Url = null;
         try {
             // 파이썬 스크립트 실행
-            ProcessBuilder pb = new ProcessBuilder("/usr/bin/python3", "/app/script.py", excelFilePath, pdfFilePath);
+            ProcessBuilder pb = new ProcessBuilder("/app/venv/bin/python3", "/app/script.py", excelFilePath, pdfFilePath, excelFileName);
             Process process = pb.start();
 
             // 파이썬 출력 읽기
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
             String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+            while ((line = outputReader.readLine()) != null) {
+                // Capture S3 URL if the script returns it
+                if (line.startsWith("s3_url:")) {
+                    s3Url = line.substring(7);
+                }
+                System.out.println("STDOUT: " + line);
+            }
+
+            while ((line = errorReader.readLine()) != null) {
+                System.err.println("STDERR: " + line);
             }
 
             int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                System.out.println("엑셀 파일이 PDF로 성공적으로 변환되었습니다.");
+            if (exitCode == 0 && s3Url != null) {
+                System.out.println("Excel file successfully converted to PDF and uploaded to S3. URL: " + s3Url);
             } else {
-                System.out.println("엑셀 파일 변환 중 오류 발생.");
+                System.out.println("An error occurred during the conversion or upload.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // Return the captured S3 URL (or null if there was an issue)
+        return s3Url;
     }
+
 
 
     private PageResponse<EstimateListResponse> getEstimateListResponsePageResponse(Page<Estimate> estimateList) {

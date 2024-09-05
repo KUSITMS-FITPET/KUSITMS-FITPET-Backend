@@ -1,6 +1,3 @@
-pandas
-openpyxl
-fpdf
-aspose-cells
-
 boto3
+jpype1
+aspose-cells
