@@ -40,14 +40,14 @@ public class ReviewServiceImpl implements ReviewService {
         String petInfo = null;
 
         if (isDog && !isCat) {
-            petInfo = "고양이";  // 고양이 리뷰를 필터링
-        } else if (isCat && !isDog) {
             petInfo = "강아지";  // 강아지 리뷰를 필터링
+        } else if (isCat && !isDog) {
+            petInfo = "고양이";  // 고양이 리뷰를 필터링
         }
 
         Sort sort = Sort.by("createdAt").descending();  // 기본 최신순 정렬
 
-        if (!Objects.equals(orderBy, "asc")) {
+        if (!Objects.equals(orderBy, "desc")) {
             sort = Sort.by("star").descending();  // 별점 순으로 정렬
         }
 
