@@ -47,7 +47,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         Sort sort = Sort.by("createdAt").descending();  // 기본 최신순 정렬
 
-        if (!Objects.equals(orderBy, "최신순")) {
+        if (!Objects.equals(orderBy, "asc")) {
             sort = Sort.by("star").descending();  // 별점 순으로 정렬
         }
 
