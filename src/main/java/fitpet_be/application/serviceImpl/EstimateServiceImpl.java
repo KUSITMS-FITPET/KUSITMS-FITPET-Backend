@@ -427,9 +427,11 @@ public class EstimateServiceImpl implements EstimateService {
 
     private void setSheet(XSSFWorkbook workbook, int setSheet, Estimate estimate) {
         XSSFSheet sheet = workbook.getSheetAt(setSheet);
-        setValue(sheet, "C8", String.valueOf(estimate.getPetInfo()));
+        setValue(sheet, "C8", String.valueOf(estimate.getPetName()));
         setValue(sheet, "C9", String.valueOf(estimate.getPetSpecies()));
         setValue(sheet, "C11", String.valueOf(estimate.getPetAge()));
+
+        sheet.setForceFormulaRecalculation(true);
     }
 
     private void setValue(XSSFSheet sheet, String position, String value) {

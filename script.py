@@ -29,7 +29,7 @@ s3 = s3_connection()
 def excel_to_pdf(excel_file, sheet_indices, output_pdf):
     try:
 
-        font_folder = "/usr/share/fonts/nanum"  # 나눔 폰트가 설치된 경로
+        font_folder = "/usr/share/fonts/truetype/nanum"  # 나눔 폰트가 설치된 경로
         FontConfigs.setFontFolder(font_folder, False)
 
         # 원본 워크북 로드
