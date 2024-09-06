@@ -16,8 +16,6 @@ import org.springframework.data.domain.Pageable;
 public interface EstimateService {
     void createEstimateService(EstimateServiceRequest estimateServiceRequest) throws IOException;
 
-    void downloadEstimate(Long estimateId);
-
     PageResponse<EstimateListResponse> getEstimateListDesc(Pageable pageable);
 
     PageResponse<EstimateListResponse> getEstimateListAsc(Pageable pageable);
@@ -30,8 +28,7 @@ public interface EstimateService {
 
     String getEstimateFileName(Long estimateId);
 
-    String convertExcelToPdf(String excelFilePath, String pdfFilePath, String excelFileName);
+    String convertExcelToPdf(Long estimateId, String petInfo) throws IOException;
 
-//    String convertExcelToPdfs(Long estimateId);
 
 }
