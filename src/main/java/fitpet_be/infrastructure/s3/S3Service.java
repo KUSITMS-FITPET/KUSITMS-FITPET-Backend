@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import fitpet_be.application.dto.EstimateUploadDto;
 import fitpet_be.application.dto.request.CardnewsCreateRequest;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +39,13 @@ public class S3Service {
 
     // 고유한 파일명 생성
     private String createFileName(EstimateUploadDto estimateUploadDto) {
-        return estimateUploadDto.getPhoneNumber() + "_" + estimateUploadDto.getCreatedAt() + ".xlsx";
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        String formattedDate = estimateUploadDto.getCreatedAt().format(formatter);
+
+        return estimateUploadDto.getPhoneNumber() + "_" + formattedDate + ".xlsx";
+
     }
 
     // 견적서 업로드
@@ -53,14 +60,6 @@ public class S3Service {
 
         return uploadToS3(file, CARDNEWS_FOLDER, file.getName());
 
-    }
-
-    public void deleteFile(String filePath) {
-        try {
-            amazonS3Client.deleteObject(bucket, filePath);
-        } catch (AmazonServiceException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 삭제에 실패했습니다.");
-        }
     }
 
 

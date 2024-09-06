@@ -88,7 +88,11 @@ public class EstimateServiceImpl implements EstimateService {
         Estimate estimate = estimateRepository.findById(estimateId)
                 .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
 
-        return estimate.getPhoneNumber() + "_" + estimate.getCreatedAt() + ".xlsx";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        String formattedDate = estimate.getCreatedAt().format(formatter);
+
+        return estimate.getPhoneNumber() + "_" + formattedDate + ".xlsx";
 
     }
 
