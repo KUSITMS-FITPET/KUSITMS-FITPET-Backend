@@ -70,9 +70,9 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize ->
                 authorize.requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-                    .requestMatchers("/api/v1/fitpetAdmin/master/**").hasRole("MASTER")
-                    .requestMatchers("/api/v1/fitpetAdmin/estimates/**").hasRole("ESTIMATES")
-                    .requestMatchers("/api/v1/fitpetAdmin/cardNews/**").hasRole("CONTENTS")
+                    //.requestMatchers("/api/v1/fitpetAdmin/master/**").hasRole("MASTER")
+                    //.requestMatchers("/api/v1/fitpetAdmin/estimates/**").hasRole("ESTIMATES")
+                    //.requestMatchers("/api/v1/fitpetAdmin/cardNews/**").hasRole("CONTENTS")
                     .anyRequest().permitAll())  // 나머지 요청은 인증 없이 접근 가능
             .exceptionHandling(handler ->
                 handler.authenticationEntryPoint(jwtAuthenticationEntryPoint)
@@ -86,10 +86,22 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3001"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        configuration.setAllowedOriginPatterns(List.of("*"));
+
+        // 모든 메서드 허용
+        configuration.setAllowedMethods(List.of("*"));
+
+        // 모든 헤더 허용
+        configuration.setAllowedHeaders(List.of("*"));
+
+        // 응답 헤더에서도 모든 헤더를 노출
+        configuration.addExposedHeader("*");
+
+        // 자격 증명 허용
         configuration.setAllowCredentials(true);
+
+        // 캐시 시간 설정
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
