@@ -16,8 +16,6 @@ import org.springframework.data.domain.Pageable;
 public interface EstimateService {
     void createEstimateService(EstimateServiceRequest estimateServiceRequest) throws IOException;
 
-    void downloadEstimate(Long estimateId);
-
     PageResponse<EstimateListResponse> getEstimateListDesc(Pageable pageable);
 
     PageResponse<EstimateListResponse> getEstimateListAsc(Pageable pageable);

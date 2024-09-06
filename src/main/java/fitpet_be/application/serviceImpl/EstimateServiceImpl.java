@@ -92,47 +92,6 @@ public class EstimateServiceImpl implements EstimateService {
 
     }
 
-    @Override
-    public void downloadEstimate(Long estimateId) {
-        Estimate estimate = estimateRepository.findById(estimateId).orElseThrow(
-                () -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND)
-        );
-
-        String fileUrl = estimate.getUrl();
-        File tempFile = null;
-
-        try {
-            URL url = new URL(fileUrl);
-
-            tempFile = File.createTempFile("estimate-", ".xlsx");
-
-            try (InputStream in = url.openStream();
-                 FileOutputStream out = new FileOutputStream(tempFile)) {
-
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, bytesRead);
-                }
-
-                // 견적서 추출 로직
-
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new ApiException(ErrorStatus._FILE_DOWNLOAD_FAILED);
-        } finally {
-            // 작업 완료 후 파일 삭제
-            if (tempFile != null && tempFile.exists()) {
-                if (tempFile.delete()) {
-                    System.out.println("Temporary file deleted successfully.");
-                } else {
-                    System.err.println("Failed to delete the temporary file.");
-                }
-            }
-        }
-    }
-
     @Transactional
     public void uploadEstimate(Estimate estimate) throws IOException {
         // 1. S3에서 원본 파일 다운로드

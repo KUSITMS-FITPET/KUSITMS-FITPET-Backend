@@ -160,7 +160,7 @@ public class AdminController {
 
     }
 
-    @Operation(summary = "Admin History 추출", description = "History를 추출 후 다운로드합니다.")
+    @Operation(summary = "Admin History 추출(내보내기)", description = "History를 추출 후 다운로드합니다.")
     @PostMapping("/estimates/export")
     public ResponseEntity<Resource> exportHistory(@RequestBody EstimateHistoryExportRequest request)
             throws IOException {
