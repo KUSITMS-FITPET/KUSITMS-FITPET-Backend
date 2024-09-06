@@ -99,7 +99,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional
-    public String createCardNewsImg(MultipartFile multipartFile) {
+    public String uploadCardNewsImg(MultipartFile multipartFile) {
 
         try {
             File file = convertMultiPartToFile(multipartFile);
@@ -123,32 +123,6 @@ public class AdminServiceImpl implements AdminService {
 
     }
 
-    @Override
-    @Transactional
-    public String updateCardNewsImg(MultipartFile multipartFile, Long cardNewsId) {
-
-        Cardnews cardnews = cardnewsRepository.findById(cardNewsId)
-                .orElseThrow(() -> new ApiException(ErrorStatus._CARDNEWS_NOT_FOUND));
-
-        String existingFilePath = cardnews.getImageUrl();
-        try {
-            // S3 객체 키 추출: 전체 URL에서 경로만 추출 (예: cardnews/배경화면 메인.jpg)
-            String objectKey = cardNewsExtractS3ObjectKey(existingFilePath);
-
-            // 기존 파일 삭제
-            s3Service.deleteFile(objectKey);
-
-            // MultipartFile을 File로 변환
-            File file = convertMultiPartToFile(multipartFile);
-
-            // S3에 새로운 파일 업로드
-            return s3Service.uploadCardnews(file);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
     @Override
     @Transactional
     public String updateCardNews(CardnewsUpdateRequest request, Long cardNewsId) {

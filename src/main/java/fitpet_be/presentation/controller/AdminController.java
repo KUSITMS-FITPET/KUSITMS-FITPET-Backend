@@ -211,7 +211,7 @@ public class AdminController {
     public ApiResponse<String> createCardNewsImg (@RequestParam("file") MultipartFile file) {  // JSON 데이터를 받는 부분
 
         // adminService 호출하여 파일 및 데이터 처리
-        return ApiResponse.onSuccess(adminService.createCardNewsImg(file));
+        return ApiResponse.onSuccess(adminService.uploadCardNewsImg(file));
 
     }
 
@@ -232,7 +232,7 @@ public class AdminController {
             @RequestParam("file") MultipartFile file,
             @RequestParam Long cardNewsId) {
 
-        return ApiResponse.onSuccess(adminService.updateCardNewsImg(file, cardNewsId));
+        return ApiResponse.onSuccess(adminService.uploadCardNewsImg(file));
 
     }
     // 카드뉴스 수정 (작성일시 수정일시로 변경돼야 함)

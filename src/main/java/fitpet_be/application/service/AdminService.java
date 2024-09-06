@@ -27,11 +27,9 @@ public interface AdminService {
 
     String authorizeAdmin(AdminAccessRequest adminAccessRequest);
 
-    String createCardNewsImg(MultipartFile multipartFile);
+    String uploadCardNewsImg(MultipartFile multipartFile);
 
     String createCardNews(CardnewsCreateRequest request);
-
-    String updateCardNewsImg(MultipartFile multipartFile, Long cardNewsId);
 
     String updateCardNews(CardnewsUpdateRequest request, Long cardNewsId);
 
