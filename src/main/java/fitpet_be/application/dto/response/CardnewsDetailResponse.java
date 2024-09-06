@@ -16,7 +16,7 @@ public class CardnewsDetailResponse {
     @Builder
     public CardnewsDetailResponse(
             Long cardNewsId, String cardNewsTitle,
-            String cardNewsContent, String image_url) {
+            String cardNewsContent, String image_url, String contentDetails) {
 
         this.cardNewsId = cardNewsId;
         this.cardNewsTitle = cardNewsTitle;

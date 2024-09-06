@@ -49,7 +49,7 @@ public class CardnewsServiceImpl implements CardnewsService {
         return CardnewsDetailResponse.builder()
                 .cardNewsId(cardNews.getId())
                 .cardNewsTitle(cardNews.getTitle())
-                .cardNewsContent((cardNews.getContent()))
+                .cardNewsContent((cardNews.getContentDetails()))
                 .image_url(cardNews.getImageUrl())
                 .build();
 
