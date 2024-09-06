@@ -3,24 +3,25 @@ package fitpet_be.presentation.controller;
 import fitpet_be.application.dto.request.AdminAccessRequest;
 import fitpet_be.application.dto.request.AdminCreateRequest;
 import fitpet_be.application.dto.request.AdminLoginRequest;
+import fitpet_be.application.dto.request.CardnewsCreateRequest;
+import fitpet_be.application.dto.request.CardnewsDeleteRequest;
+import fitpet_be.application.dto.request.CardnewsSearchRequest;
+import fitpet_be.application.dto.request.CardnewsUpdateRequest;
 import fitpet_be.application.dto.response.AdminDetailResponse;
 import fitpet_be.application.dto.request.EstimateHistoryExportRequest;
 import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.application.dto.request.EstimateUpdateRequest;
+import fitpet_be.application.dto.response.CardnewsListResponse;
 import fitpet_be.application.dto.response.EstimateListResponse;
 import fitpet_be.application.service.AdminService;
 import fitpet_be.application.service.EstimateService;
 import fitpet_be.common.ApiResponse;
 import fitpet_be.common.PageResponse;
 import fitpet_be.domain.model.Admin;
-import fitpet_be.domain.model.Contact;
 import fitpet_be.infrastructure.s3.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.servlet.http.Cookie;
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +31,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +41,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -200,5 +204,69 @@ public class AdminController {
 //            return new ResponseEntity<>("파일 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 //        }
 //    }
+
+    // 카드뉴스 이미지 업로드
+    @Operation(summary = "Admin 카드뉴스 생성(이미지 업로드)", description = "카드뉴스 생성할 때 필요한 이미지를 업로드합니다.")
+    @PostMapping(value = "/cardNews/create/image", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ApiResponse<String> createCardNewsImg (@RequestParam("file") MultipartFile file) {  // JSON 데이터를 받는 부분
+
+        // adminService 호출하여 파일 및 데이터 처리
+        return ApiResponse.onSuccess(adminService.createCardNewsImg(file));
+
+    }
+
+    // 카드뉴스 생성
+    @Operation(summary = "Admin 카드뉴스 생성(카드뉴스 업로드)", description = "카드뉴스를 생성합니다.")
+    @PostMapping("/cardNews/create")
+    public ApiResponse<String> createCardNews(@RequestBody CardnewsCreateRequest request) {
+
+        return ApiResponse.onSuccess(adminService.createCardNews(request));
+
+    }
+
+    // 카드뉴스 수정 이미지 업로드
+    @Operation(summary = "Admin 카드뉴스 수정(이미지 업로드)", description = "카드뉴스 수정할 때 필요한 이미지를 업로드합니다.")
+
+    @PostMapping(value = "/cardNews/update/image", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ApiResponse<String> updateCardNewsImg(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam Long cardNewsId) {
+
+        return ApiResponse.onSuccess(adminService.updateCardNewsImg(file, cardNewsId));
+
+    }
+    // 카드뉴스 수정 (작성일시 수정일시로 변경돼야 함)
+    @Operation(summary = "Admin 카드뉴스 수정(카드뉴스 업로드)", description = "카드뉴스를 수정합니다.")
+    @PatchMapping("/cardNews/update/{cardNewsId}")
+    public ApiResponse<String> updateCardNews(
+            @PathVariable Long cardNewsId,
+            @RequestBody CardnewsUpdateRequest request) {
+
+        return ApiResponse.onSuccess(adminService.updateCardNews(request, cardNewsId));
+
+    }
+
+    // 카드뉴스 삭제 (리스트)
+    @Operation(summary = "Admin 카드뉴스 삭제", description = "카드뉴스를 삭제합니다.")
+    @DeleteMapping("/cardNews/delete")
+    public ApiResponse<String> deleteCardNews(@RequestBody CardnewsDeleteRequest request) {
+
+        return ApiResponse.onSuccess(adminService.deleteCardNews(request));
+
+    }
+
+    // 카드뉴스 검색 (제목 + 내용)
+    @Operation(summary = "Admin 카드뉴스 검색 (제목 + 내용)", description = "keyword에 해당하는 카드뉴스를 검색합니다.")
+    @PostMapping("/cardNews/search")
+    public ApiResponse<PageResponse<CardnewsListResponse>> getCardnewsSearch(
+            @RequestParam("page") int page,
+            @RequestParam(value = "size", defaultValue = "12") int size,
+            @RequestBody CardnewsSearchRequest request) {
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        return ApiResponse.onSuccess(adminService.getCardnewsSearchList(request, pageable));
+
+    }
 
 }

@@ -180,6 +180,7 @@ public class EstimateServiceImpl implements EstimateService {
     }
 
     @Override
+    @Transactional
     public void updateEstimateAtAdmin(Long estimateId, EstimateUpdateRequest request) {
 
         Estimate originalEstimate = estimateRepository.findById(estimateId)

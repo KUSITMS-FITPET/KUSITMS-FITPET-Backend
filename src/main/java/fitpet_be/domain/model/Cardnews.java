@@ -40,4 +40,13 @@ public class Cardnews extends BaseTimeEntity {
         this.imageUrl = imageUrl;
     }
 
+    public void updateCardnews(String title, String content,
+                               String imageUrl) {
+
+        this.title = title;
+        this.content = content;
+        this.imageUrl = imageUrl;
+
+    }
+
 }

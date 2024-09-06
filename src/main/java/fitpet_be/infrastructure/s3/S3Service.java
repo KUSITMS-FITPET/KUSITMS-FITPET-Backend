@@ -1,9 +1,11 @@
 package fitpet_be.infrastructure.s3;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import fitpet_be.application.dto.EstimateUploadDto;
+import fitpet_be.application.dto.request.CardnewsCreateRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +26,7 @@ public class S3Service {
 
     private static final String ESTIMATES_FOLDER = "estimates/";
     private static final String EXCEL_FOLDER = "excels/";
+    private static final String CARDNEWS_FOLDER = "cardnews/";
     public static final String ORIGINAL_FILE_KEY = EXCEL_FOLDER + "OriginalSCFile.xlsx";
     public static final String ORIGINAL_EXPORT_FILE_KEY = EXCEL_FOLDER + "OriginalSCExportFile.xlsx";
 
@@ -45,6 +48,22 @@ public class S3Service {
 
         return uploadToS3(file, ESTIMATES_FOLDER, fileName);
     }
+
+    public String uploadCardnews(File file) throws IOException {
+
+        return uploadToS3(file, CARDNEWS_FOLDER, file.getName());
+
+    }
+
+    public void deleteFile(String filePath) {
+        try {
+            amazonS3Client.deleteObject(bucket, filePath);
+        } catch (AmazonServiceException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 삭제에 실패했습니다.");
+        }
+    }
+
+
 
     // S3에서 파일 다운로드 후 File로 변환
     public File downloadFileFromS3(String s3Key) throws IOException {
@@ -78,6 +97,5 @@ public class S3Service {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.");
         }
     }
-
 
 }
