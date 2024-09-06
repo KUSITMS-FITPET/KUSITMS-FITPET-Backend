@@ -200,30 +200,32 @@ public class EstimateServiceImpl implements EstimateService {
             int rowIndex = 1;
 
             for (Long estimateId : ids) {
-                Estimate estimate = estimateRepository.findById(estimateId)
-                    .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
+                if (estimateId == -1L) {
+                    List<Estimate> allEstimates = estimateRepository.findAll();
 
-                Row row = sheet.getRow(rowIndex);
-                if (row == null) {
+                    for (Estimate estimate : allEstimates) {
+                        Row row = sheet.getRow(rowIndex);
+                        if (row == null) {
+                            row = sheet.createRow(rowIndex);
+                        }
 
-                    row = sheet.createRow(rowIndex);
+                        writeEstimateToRow(row, estimate, rowIndex, formatter);
+                        rowIndex++;
+                    }
+                } else {
+                    Estimate estimate = estimateRepository.findById(estimateId)
+                        .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
 
+                    Row row = sheet.getRow(rowIndex);
+                    if (row == null) {
+                        row = sheet.createRow(rowIndex);
+                    }
+
+                    writeEstimateToRow(row, estimate, rowIndex, formatter);
+                    rowIndex++;
                 }
-
-                System.out.println(estimate.getCreatedAt());
-                row.createCell(0).setCellValue(rowIndex - 1);
-                row.createCell(1).setCellValue(estimate.getIp());
-                row.createCell(2).setCellValue(estimate.getRefeere());
-                row.createCell(3).setCellValue(estimate.getCreatedAt().format(formatter));
-                row.createCell(4).setCellValue(estimate.getPetInfo());
-                row.createCell(5).setCellValue(estimate.getPetName());
-                row.createCell(6).setCellValue(estimate.getPetAge());
-                row.createCell(7).setCellValue(estimate.getPetSpecies());
-                row.createCell(8).setCellValue(estimate.getMoreInfo());
-                row.createCell(9).setCellValue(estimate.getPhoneNumber());
-                rowIndex++;
-
             }
+
 
             // 파일을 저장할 위치를 시스템의 기본 임시 디렉토리로 설정
             String tempDir = System.getProperty("java.io.tmpdir");
@@ -243,6 +245,19 @@ public class EstimateServiceImpl implements EstimateService {
 
         }
 
+    }
+
+    private void writeEstimateToRow(Row row, Estimate estimate, int rowIndex, DateTimeFormatter formatter) {
+        row.createCell(0).setCellValue(rowIndex - 1);
+        row.createCell(1).setCellValue(estimate.getIp());
+        row.createCell(2).setCellValue(estimate.getRefeere());
+        row.createCell(3).setCellValue(estimate.getCreatedAt().format(formatter));
+        row.createCell(4).setCellValue(estimate.getPetInfo());
+        row.createCell(5).setCellValue(estimate.getPetName());
+        row.createCell(6).setCellValue(estimate.getPetAge());
+        row.createCell(7).setCellValue(estimate.getPetSpecies());
+        row.createCell(8).setCellValue(estimate.getMoreInfo());
+        row.createCell(9).setCellValue(estimate.getPhoneNumber());
     }
 
     @Override
