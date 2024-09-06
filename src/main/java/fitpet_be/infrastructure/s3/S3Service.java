@@ -59,6 +59,7 @@ public class S3Service {
                 outputStream.write(readBuf, 0, readLen);
             }
         }
+
         return tempFile;
     }
 

@@ -15,16 +15,12 @@ import fitpet_be.common.ApiResponse;
 import fitpet_be.common.ErrorStatus;
 import fitpet_be.common.PageResponse;
 import fitpet_be.domain.model.Admin;
-import fitpet_be.domain.model.Contact;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.servlet.http.Cookie;
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.io.File;
 import java.io.IOException;
@@ -169,7 +165,7 @@ public class AdminController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"SCEstimateHistory.xlsx\"")
-                .body(estimateService.exportHistory(file, request.getExportInfoDtoList()));
+                .body(estimateService.exportHistory(file, request.getIds()));
 
     }
 
