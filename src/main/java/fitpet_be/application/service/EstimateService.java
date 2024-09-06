@@ -30,8 +30,7 @@ public interface EstimateService {
 
     String getEstimateFileName(Long estimateId);
 
-    String convertExcelToPdf(String excelFilePath, String pdfFilePath, String excelFileName);
+    String convertExcelToPdf(Long estimateId, String petInfo) throws IOException;
 
-//    String convertExcelToPdfs(Long estimateId);
 
 }

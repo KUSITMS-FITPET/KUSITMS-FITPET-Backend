@@ -78,6 +78,11 @@ dependencies {
 
 	// iText 7 for PDF generation
 	implementation 'com.itextpdf:itext7-core:7.1.15'
+
+	implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+	implementation 'org.apache.httpcomponents:httpmime:4.5.13'
+
+
 }
 
 tasks.named('test') {
