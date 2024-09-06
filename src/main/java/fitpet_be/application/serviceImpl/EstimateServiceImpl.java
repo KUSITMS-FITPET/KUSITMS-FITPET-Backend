@@ -127,7 +127,9 @@ public class EstimateServiceImpl implements EstimateService {
 
         Page<Estimate> estimates = estimateRepository.findAllByOrderByDesc(pageable);
 
-        return getEstimateListResponsePageResponse(estimates);
+        Long totalCount = estimateRepository.estimateTotalCount();
+
+        return getEstimateListResponsePageResponse(estimates, totalCount);
 
     }
 
@@ -136,7 +138,9 @@ public class EstimateServiceImpl implements EstimateService {
 
         Page<Estimate> estimates = estimateRepository.findAllByOrderByAsc(pageable);
 
-        return getEstimateListResponsePageResponse(estimates);
+        Long totalCount = estimateRepository.estimateTotalCount();
+
+        return getEstimateListResponsePageResponse(estimates, totalCount);
 
     }
 
@@ -156,8 +160,12 @@ public class EstimateServiceImpl implements EstimateService {
                         request.getRefeere(), request.getPetInfo(),
                         request.getPhoneNumber(), pageable);
 
-        return getEstimateListResponsePageResponse(estimates);
+        Long totalCount = estimateRepository.estimateTotalCountBySearch(
+                startDate, endDate,
+                request.getRefeere(), request.getPetInfo(),
+                request.getPhoneNumber());
 
+        return getEstimateListResponsePageResponse(estimates, totalCount);
     }
 
     @Override
@@ -394,7 +402,7 @@ public class EstimateServiceImpl implements EstimateService {
 
 
 
-    private PageResponse<EstimateListResponse> getEstimateListResponsePageResponse(Page<Estimate> estimateList) {
+    private PageResponse<EstimateListResponse> getEstimateListResponsePageResponse(Page<Estimate> estimateList, Long totalCount) {
 
         List<EstimateListResponse> estimateListResponses = estimateList.stream()
                 .map(estimates -> EstimateListResponse.builder()
@@ -411,7 +419,6 @@ public class EstimateServiceImpl implements EstimateService {
                         .build())
                 .toList();
 
-        Long totalCount = estimateRepository.estimateTotalCount();
 
         return PageResponse.<EstimateListResponse>builder()
                 .listPageResponse(estimateListResponses)
@@ -420,6 +427,7 @@ public class EstimateServiceImpl implements EstimateService {
                 .build();
 
     }
+
 
     private void setSheet(XSSFWorkbook workbook, int setSheet, Estimate estimate) {
         XSSFSheet sheet = workbook.getSheetAt(setSheet);
