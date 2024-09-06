@@ -27,8 +27,8 @@ public interface EstimateRepository extends JpaEstimateRepository {
 
     @Query("SELECT e FROM Estimate e WHERE "
             + "(e.createdAt >= :startDate AND e.createdAt <= :endDate) AND "
-            + "(e.refeere = :refeere) AND "
-            + "(e.petInfo = :petInfo) AND "
+            + "(e.refeere = :refeere) OR "
+            + "(e.petInfo = :petInfo) OR "
             + "(e.phoneNumber LIKE %:phoneNumber%)"
             + "ORDER BY e.createdAt DESC ")
     Page<Estimate> findAllBySearch(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate,
@@ -37,8 +37,8 @@ public interface EstimateRepository extends JpaEstimateRepository {
 
     @Query("SELECT count(e) FROM Estimate e WHERE "
             + "(e.createdAt >= :startDate AND e.createdAt <= :endDate) AND "
-            + "(e.refeere = :refeere) AND "
-            + "(e.petInfo = :petInfo) AND "
+            + "(e.refeere = :refeere) OR "
+            + "(e.petInfo = :petInfo) OR "
             + "(e.phoneNumber LIKE %:phoneNumber%)")
     Long estimateTotalCountBySearch(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate,
                                     @Param("refeere") String refeere, @Param("petInfo") String petInfo,
