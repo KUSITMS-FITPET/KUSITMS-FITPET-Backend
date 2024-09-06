@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -200,6 +201,59 @@ public class AdminController {
                 .body(null);
         }
     }
+
+    @PostMapping("/estimates/convert/async/{estimateId}")
+    public ResponseEntity<String> startFileProcessing(@PathVariable("estimateId") Long estimateId) {
+        Estimate estimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
+
+        String petInfo = estimate.getPetInfo();
+
+        // 백그라운드에서 파일 생성 시작
+        estimateService.generatePdfAsync(estimateId, petInfo);
+
+        // 즉시 응답 반환
+        return ResponseEntity.accepted().body("파일이 생성 중입니다. 완료되면 다운로드할 수 있습니다.");
+    }
+
+    // 파일 상태 확인 API
+    @GetMapping("/estimates/status/{estimateId}")
+    public ResponseEntity<Boolean> checkFileStatus(@PathVariable("estimateId") Long estimateId) {
+        Estimate estimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
+
+        String pdfUrl = estimate.getUrl();
+
+        // 파일이 존재하는지 여부를 확인
+        if (pdfUrl == null || pdfUrl.isEmpty()) {
+            return ResponseEntity.ok(false);  // 파일이 아직 준비되지 않았음
+        }
+
+        return ResponseEntity.ok(true);  // 파일이 준비되었음
+
+    }
+
+
+
+    @GetMapping("/estimates/download/{estimateId}")
+    public ResponseEntity<Resource> downloadPdf(@PathVariable("estimateId") Long estimateId) throws IOException {
+        Estimate estimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
+
+        String pdfUrl = estimate.getUrl();
+
+        if (pdfUrl == null || pdfUrl.isEmpty()) {
+            throw new ApiException(ErrorStatus._FILE_NOT_FOUND);
+        }
+
+        Resource resource = new UrlResource(pdfUrl);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + new File(pdfUrl).getName() + "\"")
+                .body(resource);
+    }
+
+
 
 
 

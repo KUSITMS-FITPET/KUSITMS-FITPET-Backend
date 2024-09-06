@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -41,8 +42,10 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -322,6 +325,82 @@ public class EstimateServiceImpl implements EstimateService {
             return new FileSystemResource(pdfFile);
         }
     }
+
+    @Async
+    @Override
+    public CompletableFuture<String> generatePdfAsync(Long estimateId, String petInfo) {
+        try{
+            String filePath = convertExcelToPdf2(estimateId, petInfo);  // 파일 생성 메서드
+            return CompletableFuture.completedFuture(filePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ApiException(ErrorStatus._FILE_CONVERT_FAIL);
+        }
+
+    }
+
+    @Override
+    public String getGeneratedPdfPath(Long estimateId) {
+        Estimate estimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
+
+        String pdfUrl = estimate.getUrl();
+
+        if (pdfUrl == null || pdfUrl.isEmpty()) {
+            throw new ApiException(ErrorStatus._FILE_NOT_FOUND);
+        }
+
+        return pdfUrl;
+    }
+
+    private String convertExcelToPdf2(Long estimateId, String petInfo) throws IOException {
+        // 1. Download the file from S3
+        File excelFile = s3Service.downloadFileFromS3("estimates/" + getEstimateFileName(estimateId));
+
+        // 2. Define file paths
+        String excelFilePath = excelFile.getAbsolutePath();
+        String pdfFilePath = excelFilePath.replace(".xlsx", ".pdf");
+
+        // 3. Load the Excel file using Apache POI and filter sheets
+        try (FileInputStream fis = new FileInputStream(excelFile)) {
+            XSSFWorkbook workbook = new XSSFWorkbook(fis);
+
+            // Determine which sheets to keep
+            Set<Integer> sheetsToKeep = new HashSet<>();
+            if ("강아지".equals(petInfo)) {
+                sheetsToKeep.add(0); // Sheet 0
+                sheetsToKeep.add(1); // Sheet 1
+                sheetsToKeep.add(2); // Sheet 2
+            } else if ("고양이".equals(petInfo)) {
+                sheetsToKeep.add(3); // Sheet 3
+                sheetsToKeep.add(4); // Sheet 4
+                sheetsToKeep.add(5); // Sheet 5
+            } else {
+                throw new IllegalArgumentException("Invalid petInfo value");
+            }
+
+            for (int i = workbook.getNumberOfSheets() - 1; i >= 0; i--) {
+                if (!sheetsToKeep.contains(i)) {
+                    workbook.removeSheetAt(i);
+                }
+            }
+
+            try (FileOutputStream fos = new FileOutputStream(excelFilePath)) {
+                workbook.write(fos);
+            }
+
+            try {
+                String token = getToken();
+                uploadFileAndConvertToPdf(excelFilePath, pdfFilePath, token);
+            } catch (Exception e) {
+                throw new IOException("Failed to convert Excel to PDF", e);
+            }
+
+            return pdfFilePath;
+        }
+    }
+
+
 
     private void uploadFileAndConvertToPdf(String excelFilePath, String pdfFilePath, String token) throws IOException {
         File file = new File(excelFilePath);
