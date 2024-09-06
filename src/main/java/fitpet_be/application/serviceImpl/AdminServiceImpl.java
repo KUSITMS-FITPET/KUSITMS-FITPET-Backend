@@ -131,7 +131,7 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new ApiException(ErrorStatus._CARDNEWS_NOT_FOUND));
 
 
-        cardnews.updateCardnews(request.getTitle(), request.getContent(), request.getImageUrl());
+        cardnews.updateCardnews(request.getTitle(), request.getContent(), request.getImageUrl(), request.getContentDetails());
 
         cardnewsRepository.save(cardnews);
 

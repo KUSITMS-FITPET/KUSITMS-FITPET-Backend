@@ -32,7 +32,7 @@ public class Review extends BaseTimeEntity {
     @Column(name = "review_pet_species", nullable = false)
     private String petSpecies;
 
-    @Column(name = "review_content", nullable = false)
+    @Column(name = "review_content", nullable = false, length = 1000)
     private String content;
 
     @Column(name = "review_star", nullable = false)

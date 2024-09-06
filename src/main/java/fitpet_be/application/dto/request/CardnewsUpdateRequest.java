@@ -11,5 +11,6 @@ public class CardnewsUpdateRequest {
     private String title;
     private String content;
     private String imageUrl;
+    private String contentDetails;
 
 }

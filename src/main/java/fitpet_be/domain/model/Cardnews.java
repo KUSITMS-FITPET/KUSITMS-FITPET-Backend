@@ -29,23 +29,28 @@ public class Cardnews extends BaseTimeEntity {
     @Column(name = "cardnews_content", nullable = false)
     private String content;
 
+    @Column(name = "cardnews_content_details", nullable = false, length = 10000)
+    private String contentDetails;
+
     @Column(name = "cardnews_image_url", nullable = false)
     private String imageUrl;
 
     @Builder
     public Cardnews(String title, String content,
-                    String imageUrl) {
+                    String imageUrl, String contentDetails) {
         this.title = title;
         this.content = content;
         this.imageUrl = imageUrl;
+        this.contentDetails = contentDetails;
     }
 
     public void updateCardnews(String title, String content,
-                               String imageUrl) {
+                               String imageUrl, String contentDetails) {
 
         this.title = title;
         this.content = content;
         this.imageUrl = imageUrl;
+        this.contentDetails = contentDetails;
 
     }
 
