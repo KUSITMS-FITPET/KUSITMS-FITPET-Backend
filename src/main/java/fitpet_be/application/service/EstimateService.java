@@ -24,7 +24,7 @@ public interface EstimateService {
 
     void updateEstimateAtAdmin(Long estimateId, EstimateUpdateRequest request);
 
-    Resource exportHistory(File file, List<HistoryExportInfoDto> exportInfos);
+    Resource exportHistory(File file, List<Long> ids);
 
     String getEstimateFileName(Long estimateId);
 
