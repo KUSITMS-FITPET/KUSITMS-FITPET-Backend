@@ -28,7 +28,7 @@ public interface EstimateService {
 
     String getEstimateFileName(Long estimateId);
 
-    String convertExcelToPdf(Long estimateId, String petInfo) throws IOException;
+    Resource convertExcelToPdf(Long estimateId, String petInfo) throws IOException;
 
 
 }

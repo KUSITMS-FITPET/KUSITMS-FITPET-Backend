@@ -262,7 +262,7 @@ public class EstimateServiceImpl implements EstimateService {
     }
 
     @Override
-    public String convertExcelToPdf(Long estimateId, String petInfo) throws IOException {
+    public Resource convertExcelToPdf(Long estimateId, String petInfo) throws IOException {
         // 1. Download the file from S3
         File excelFile = s3Service.downloadFileFromS3("estimates/" + getEstimateFileName(estimateId));
 
@@ -305,14 +305,9 @@ public class EstimateServiceImpl implements EstimateService {
                 throw new IOException("Failed to convert Excel to PDF", e);
             }
 
-            // Upload the PDF file to S3
             File pdfFile = new File(pdfFilePath);
-            String s3Folder = "estimatespdf/"; // Define your S3 folder path
-            String pdfFileName = pdfFile.getName();
-            s3Service.uploadToS3(pdfFile, s3Folder, pdfFileName);
 
-            // Return the URL or path of the uploaded PDF file
-            return s3Service.uploadToS3(pdfFile, s3Folder, pdfFileName);
+            return new FileSystemResource(pdfFile);
         }
     }
 

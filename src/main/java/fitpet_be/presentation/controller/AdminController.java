@@ -180,19 +180,27 @@ public class AdminController {
     @Operation(summary = "Admin 견적서 다운받기", description = "견적서를 pdf 파일로 다운로드합니다.")
     @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
     @PostMapping("/estimates/convert/{estimateId}")
-    public ResponseEntity<String> convertExcelToPdf(@PathVariable("estimateId") Long estimateId) throws IOException {
+    public ResponseEntity<Resource> convertExcelToPdf(@PathVariable("estimateId") Long estimateId) throws IOException {
         try {
             Estimate estimate = estimateRepository.findById(estimateId)
                 .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
 
+            String phoneNumber = estimate.getPhoneNumber();
             String petInfo = estimate.getPetInfo();
 
-            return new ResponseEntity<>("PDF 파일이 성공적으로 생성되었습니다: " + estimateService.convertExcelToPdf(estimateId, petInfo), HttpStatus.OK);
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + phoneNumber + ".pdf\"")
+                .body(estimateService.convertExcelToPdf(estimateId, petInfo));
+        } catch (ApiException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(null);
         } catch (Exception e) {
             e.printStackTrace();
-            return new ResponseEntity<>("파일 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(null);
         }
     }
+
 
 
     // 카드뉴스 이미지 업로드
