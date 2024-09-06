@@ -78,12 +78,13 @@ public class S3Service {
                 outputStream.write(readBuf, 0, readLen);
             }
         }
+
         return tempFile;
     }
 
 
     // S3에 File 객체를 업로드
-    private String uploadToS3(File file, String folder, String fileName) {
+    public String uploadToS3(File file, String folder, String fileName) {
         try (InputStream inputStream = new FileInputStream(file)) {
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentLength(file.length());

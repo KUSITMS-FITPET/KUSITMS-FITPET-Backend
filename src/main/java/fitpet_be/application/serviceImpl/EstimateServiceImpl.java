@@ -12,13 +12,23 @@ import fitpet_be.common.PageResponse;
 import fitpet_be.domain.model.Estimate;
 import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -27,6 +37,8 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -40,6 +52,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -52,6 +65,15 @@ public class EstimateServiceImpl implements EstimateService {
 
     private final EstimateRepository estimateRepository;
     private final S3Service s3Service;
+
+
+    @Value("${aspose.clientid}")
+    private String ClientId;
+
+    @Value("${aspose.clientkey}")
+    private String ClientSecret;
+
+
 
     @Override
     @Transactional
@@ -68,47 +90,6 @@ public class EstimateServiceImpl implements EstimateService {
 
         return estimate.getPhoneNumber() + "_" + estimate.getCreatedAt() + ".xlsx";
 
-    }
-
-    @Override
-    public void downloadEstimate(Long estimateId) {
-        Estimate estimate = estimateRepository.findById(estimateId).orElseThrow(
-                () -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND)
-        );
-
-        String fileUrl = estimate.getUrl();
-        File tempFile = null;
-
-        try {
-            URL url = new URL(fileUrl);
-
-            tempFile = File.createTempFile("estimate-", ".xlsx");
-
-            try (InputStream in = url.openStream();
-                 FileOutputStream out = new FileOutputStream(tempFile)) {
-
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, bytesRead);
-                }
-
-                // 견적서 추출 로직
-
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new ApiException(ErrorStatus._FILE_DOWNLOAD_FAILED);
-        } finally {
-            // 작업 완료 후 파일 삭제
-            if (tempFile != null && tempFile.exists()) {
-                if (tempFile.delete()) {
-                    System.out.println("Temporary file deleted successfully.");
-                } else {
-                    System.err.println("Failed to delete the temporary file.");
-                }
-            }
-        }
     }
 
     @Transactional
@@ -209,7 +190,7 @@ public class EstimateServiceImpl implements EstimateService {
 
     // 견적서 히스토리 추출
     @Override
-    public Resource exportHistory(File file, List<HistoryExportInfoDto> exportInfos) {
+    public Resource exportHistory(File file, List<Long> ids) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -219,28 +200,33 @@ public class EstimateServiceImpl implements EstimateService {
 
             int rowIndex = 1;
 
-            for (HistoryExportInfoDto info : exportInfos) {
-                Row row = sheet.getRow(rowIndex);
-                if (row == null) {
+            for (Long estimateId : ids) {
+                if (estimateId == -1L) {
+                    List<Estimate> allEstimates = estimateRepository.findAll();
 
-                    row = sheet.createRow(rowIndex);
+                    for (Estimate estimate : allEstimates) {
+                        Row row = sheet.getRow(rowIndex);
+                        if (row == null) {
+                            row = sheet.createRow(rowIndex);
+                        }
 
+                        writeEstimateToRow(row, estimate, rowIndex, formatter);
+                        rowIndex++;
+                    }
+                } else {
+                    Estimate estimate = estimateRepository.findById(estimateId)
+                        .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
+
+                    Row row = sheet.getRow(rowIndex);
+                    if (row == null) {
+                        row = sheet.createRow(rowIndex);
+                    }
+
+                    writeEstimateToRow(row, estimate, rowIndex, formatter);
+                    rowIndex++;
                 }
-
-                System.out.println(info.getCreatedAt());
-                row.createCell(0).setCellValue(rowIndex - 1);
-                row.createCell(1).setCellValue(info.getIp());
-                row.createCell(2).setCellValue(info.getRefeere());
-                row.createCell(3).setCellValue(info.getCreatedAt().format(formatter));
-                row.createCell(4).setCellValue(info.getPetInfo());
-                row.createCell(5).setCellValue(info.getPetName());
-                row.createCell(6).setCellValue(info.getPetAge());
-                row.createCell(7).setCellValue(info.getPetSpecies());
-                row.createCell(8).setCellValue(info.getMoreInfo());
-                row.createCell(9).setCellValue(info.getPhoneNumber());
-                rowIndex++;
-
             }
+
 
             // 파일을 저장할 위치를 시스템의 기본 임시 디렉토리로 설정
             String tempDir = System.getProperty("java.io.tmpdir");
@@ -262,142 +248,151 @@ public class EstimateServiceImpl implements EstimateService {
 
     }
 
-    @Override
-    public String convertExcelToPdf(String excelFilePath, String pdfFilePath, String excelFileName) {
-        String s3Url = null;
-        try {
-            // 파이썬 스크립트 실행
-            ProcessBuilder pb = new ProcessBuilder("/app/venv/bin/python3", "/app/script.py", excelFilePath, pdfFilePath, excelFileName);
-            Process process = pb.start();
-
-            // 파이썬 출력 읽기
-            BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-
-            String line;
-            while ((line = outputReader.readLine()) != null) {
-                // Capture S3 URL if the script returns it
-                if (line.startsWith("s3_url:")) {
-                    s3Url = line.substring(7);
-                }
-                System.out.println("STDOUT: " + line);
-            }
-
-            while ((line = errorReader.readLine()) != null) {
-                System.err.println("STDERR: " + line);
-            }
-
-            int exitCode = process.waitFor();
-            if (exitCode == 0 && s3Url != null) {
-                System.out.println("Excel file successfully converted to PDF and uploaded to S3. URL: " + s3Url);
-            } else {
-                System.out.println("An error occurred during the conversion or upload.");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // Return the captured S3 URL (or null if there was an issue)
-        return s3Url;
+    private void writeEstimateToRow(Row row, Estimate estimate, int rowIndex, DateTimeFormatter formatter) {
+        row.createCell(0).setCellValue(rowIndex - 1);
+        row.createCell(1).setCellValue(estimate.getIp());
+        row.createCell(2).setCellValue(estimate.getRefeere());
+        row.createCell(3).setCellValue(estimate.getCreatedAt().format(formatter));
+        row.createCell(4).setCellValue(estimate.getPetInfo());
+        row.createCell(5).setCellValue(estimate.getPetName());
+        row.createCell(6).setCellValue(estimate.getPetAge());
+        row.createCell(7).setCellValue(estimate.getPetSpecies());
+        row.createCell(8).setCellValue(estimate.getMoreInfo());
+        row.createCell(9).setCellValue(estimate.getPhoneNumber());
     }
 
-//    @Override
-//    public String convertExcelToPdf(String excelFilePath, String pdfFilePath, String excelFileName) {
-//        String s3Url = null;
-//        try {
-//            // Python 스크립트 실행을 위한 ProcessBuilder 설정
-//            ProcessBuilder pb = new ProcessBuilder("/app/venv/bin/python3", "/app/script.py", excelFilePath, pdfFilePath, excelFileName);
-//            Process process = pb.start();
-//
-//            // Python 스크립트 실행 결과를 읽기 위한 BufferedReader
-//            BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-//            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-//            String line;
-//
-//            // 표준 출력(STDOUT)에서 S3 URL을 찾음
-//            while ((line = outputReader.readLine()) != null) {
-//                if (line.startsWith("s3_url:")) {
-//                    s3Url = line.substring(7);  // "s3_url:" 이후의 URL 부분만 가져옴
-//                }
-//                System.out.println("STDOUT: " + line);
-//            }
-//
-//            // 표준 에러 출력(STDERR) 확인
-//            while ((line = errorReader.readLine()) != null) {
-//                System.err.println("STDERR: " + line);
-//            }
-//
-//            // Python 스크립트가 성공적으로 실행되었는지 확인
-//            int exitCode = process.waitFor();
-//            if (exitCode == 0 && s3Url != null) {
-//                System.out.println("PDF 파일이 성공적으로 생성되고 S3에 업로드되었습니다. URL: " + s3Url);
-//
-//                // 변환이 성공적으로 완료된 후 엑셀 파일 삭제
-//                File excelFile = new File(excelFilePath);
-//                if (excelFile.exists() && excelFile.delete()) {
-//                    System.out.println("Temporary Excel file deleted: " + excelFilePath);
-//                } else {
-//                    System.err.println("Failed to delete temporary Excel file: " + excelFilePath);
-//                }
-//            } else {
-//                System.err.println("PDF 변환 중 오류가 발생했습니다.");
-//            }
-//
-//        } catch (IOException | InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-//        // S3 URL 반환 (PDF 변환에 성공한 경우), 실패 시 null 반환
-//        return s3Url;
-//    }
-//
-//    @Override
-//    public String convertExcelToPdfs(Long estimateId) {
-//        String s3Url = null;
-//        try {
-//            // S3에서 파일 다운로드
-//            File excelFile = s3Service.downloadFileFromS3("estimates/" + getEstimateFileName(estimateId));
-//            String excelFilePath = "/app/" + excelFile.getName();
-//            String pdfFilePath = excelFilePath.replace(".xlsx", ".pdf");
-//
-//            // Python 스크립트 실행 (ProcessBuilder 사용)
-//            ProcessBuilder pb = new ProcessBuilder("/app/venv/bin/python3", "/app/script.py", excelFilePath, pdfFilePath, excelFile.getName());
-//            Process process = pb.start();
-//
-//            // Python 스크립트 출력 및 에러 확인
-//            BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-//            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-//            String line;
-//            while ((line = outputReader.readLine()) != null) {
-//                if (line.startsWith("s3_url:")) {
-//                    s3Url = line.substring(7);
-//                }
-//                System.out.println("STDOUT: " + line);
-//            }
-//            while ((line = errorReader.readLine()) != null) {
-//                System.err.println("STDERR: " + line);
-//            }
-//
-//            int exitCode = process.waitFor();
-//            if (exitCode == 0 && s3Url != null) {
-//                System.out.println("Excel file successfully converted to PDF and uploaded to S3. URL: " + s3Url);
-//
-//                // 변환 후 엑셀 파일 삭제
-//                if (excelFile.delete()) {
-//                    System.out.println("Temporary Excel file deleted: " + excelFile.getAbsolutePath());
-//                } else {
-//                    System.out.println("Failed to delete temporary Excel file: " + excelFile.getAbsolutePath());
-//                }
-//            } else {
-//                System.out.println("An error occurred during the conversion or upload.");
-//            }
-//
-//        } catch (IOException | InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return s3Url;  // PDF 파일의 S3 URL 반환
-//    }
+    @Override
+    public String convertExcelToPdf(Long estimateId, String petInfo) throws IOException {
+        // 1. Download the file from S3
+        File excelFile = s3Service.downloadFileFromS3("estimates/" + getEstimateFileName(estimateId));
+
+        // 2. Define file paths
+        String excelFilePath = excelFile.getAbsolutePath();
+        String pdfFilePath = excelFilePath.replace(".xlsx", ".pdf");
+
+        // 3. Load the Excel file using Apache POI and filter sheets
+        try (FileInputStream fis = new FileInputStream(excelFile)) {
+            XSSFWorkbook workbook = new XSSFWorkbook(fis);
+
+            // Determine which sheets to keep
+            Set<Integer> sheetsToKeep = new HashSet<>();
+            if ("강아지".equals(petInfo)) {
+                sheetsToKeep.add(0); // Sheet 0
+                sheetsToKeep.add(1); // Sheet 1
+                sheetsToKeep.add(2); // Sheet 2
+            } else if ("고양이".equals(petInfo)) {
+                sheetsToKeep.add(3); // Sheet 3
+                sheetsToKeep.add(4); // Sheet 4
+                sheetsToKeep.add(5); // Sheet 5
+            } else {
+                throw new IllegalArgumentException("Invalid petInfo value");
+            }
+
+            for (int i = workbook.getNumberOfSheets() - 1; i >= 0; i--) {
+                if (!sheetsToKeep.contains(i)) {
+                    workbook.removeSheetAt(i);
+                }
+            }
+
+            try (FileOutputStream fos = new FileOutputStream(excelFilePath)) {
+                workbook.write(fos);
+            }
+
+            try {
+                String token = getToken();
+                uploadFileAndConvertToPdf(excelFilePath, pdfFilePath, token);
+            } catch (Exception e) {
+                throw new IOException("Failed to convert Excel to PDF", e);
+            }
+
+            // Upload the PDF file to S3
+            File pdfFile = new File(pdfFilePath);
+            String s3Folder = "estimatespdf/"; // Define your S3 folder path
+            String pdfFileName = pdfFile.getName();
+            s3Service.uploadToS3(pdfFile, s3Folder, pdfFileName);
+
+            // Return the URL or path of the uploaded PDF file
+            return s3Service.uploadToS3(pdfFile, s3Folder, pdfFileName);
+        }
+    }
+
+    private void uploadFileAndConvertToPdf(String excelFilePath, String pdfFilePath, String token) throws IOException {
+        File file = new File(excelFilePath);
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            HttpPut httpPut = new HttpPut("https://api.aspose.cloud/v3.0/cells/convert?format=pdf");
+
+            // Add headers
+            httpPut.addHeader("Accept", "application/pdf"); // 결과를 PDF로 받기를 원하면 PDF로
+            httpPut.addHeader("x-aspose-client", "Containerize.Swagger");
+            httpPut.addHeader("Authorization", "Bearer " + token); // Bearer 뒤에 공백 필요
+
+            // Add the file to the request
+            HttpEntity entity = MultipartEntityBuilder.create()
+                .addBinaryBody("File", file, ContentType.DEFAULT_BINARY, file.getName()) // 파일 업로드
+                .build();
+            httpPut.setEntity(entity);
+
+            // Execute the request
+            try (CloseableHttpResponse response = client.execute(httpPut)) {
+                HttpEntity responseEntity = response.getEntity();
+                if (response.getStatusLine().getStatusCode() == 200) {
+                    // Save the PDF response to a file
+                    byte[] responseBytes = EntityUtils.toByteArray(responseEntity);
+                    try (FileOutputStream fos = new FileOutputStream(pdfFilePath)) {
+                        fos.write(responseBytes);
+                    }
+                } else {
+                    throw new IOException("Failed to convert Excel to PDF: " + response);
+                }
+            }
+        }
+    }
+
+    private String getToken() throws IOException {
+                String clientId = ClientId;
+                String clientSecret = ClientSecret;
+
+                // 요청 URL
+                String url = "https://api.aspose.cloud/connect/token";
+
+                // 요청 본문 구성
+                JSONObject json = new JSONObject();
+                json.put("grant_type", "client_credentials");
+                json.put("client_id", clientId);
+                json.put("client_secret", clientSecret);
+
+                // HttpClient 생성
+                try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    // POST 요청 설정
+                    HttpPost httpPost = new HttpPost(url);
+                    httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
+                    httpPost.setHeader("Accept", "application/json");
+
+                    // 본문 데이터 추가
+                    StringEntity entity = new StringEntity(
+                        "grant_type=client_credentials&client_id=" + clientId + "&client_secret=" + clientSecret,
+                        ContentType.APPLICATION_FORM_URLENCODED
+                    );
+                    httpPost.setEntity(entity);
+
+                    // 요청 실행
+                    try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                        HttpEntity responseEntity = response.getEntity();
+                        String result = EntityUtils.toString(responseEntity);
+
+                        // 응답을 JSON으로 변환하여 토큰 추출
+                        JSONObject jsonResponse = new JSONObject(result);
+                        String accessToken = jsonResponse.getString("access_token");
+
+                        return accessToken; // 토큰 반환
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+
+
 
     private PageResponse<EstimateListResponse> getEstimateListResponsePageResponse(Page<Estimate> estimateList) {
 

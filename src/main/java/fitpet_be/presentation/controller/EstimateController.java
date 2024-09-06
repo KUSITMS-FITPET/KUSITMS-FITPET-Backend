@@ -39,12 +39,5 @@ public class EstimateController {
 
     }
 
-    @Operation(summary = "견적서 다운로드", description = "특정 견적서를 다운로드 합니다")
-    @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
-    @PostMapping("/admin/{estimateId}")
-    public ApiResponse<String> downloadEstimate(@RequestParam Long estimateId) {
-        estimateService.downloadEstimate(estimateId);
-        return ApiResponse.onSuccess("견적서가 다운로드 되었습니다.");
-    }
 
 }

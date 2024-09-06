@@ -13,11 +13,15 @@ import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.application.dto.request.EstimateUpdateRequest;
 import fitpet_be.application.dto.response.CardnewsListResponse;
 import fitpet_be.application.dto.response.EstimateListResponse;
+import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.AdminService;
 import fitpet_be.application.service.EstimateService;
 import fitpet_be.common.ApiResponse;
+import fitpet_be.common.ErrorStatus;
 import fitpet_be.common.PageResponse;
 import fitpet_be.domain.model.Admin;
+import fitpet_be.domain.model.Estimate;
+import fitpet_be.domain.repository.EstimateRepository;
 import fitpet_be.infrastructure.s3.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -53,6 +57,7 @@ public class AdminController {
     private final AdminService adminService;
     private final EstimateService estimateService;
     private final S3Service s3Service;
+    private final EstimateRepository estimateRepository;
 
     @Operation(summary = "Admin 로그인", description = "Admin 계정으로 로그인 합니다")
     @PostMapping("/login")
@@ -159,7 +164,7 @@ public class AdminController {
 
     }
 
-    @Operation(summary = "Admin History 추출", description = "History를 추출 후 다운로드합니다.")
+    @Operation(summary = "Admin History 추출(내보내기)", description = "History를 추출 후 다운로드합니다.")
     @PostMapping("/estimates/export")
     public ResponseEntity<Resource> exportHistory(@RequestBody EstimateHistoryExportRequest request)
             throws IOException {
@@ -168,7 +173,7 @@ public class AdminController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"SCEstimateHistory.xlsx\"")
-                .body(estimateService.exportHistory(file, request.getExportInfoDtoList()));
+                .body(estimateService.exportHistory(file, request.getIds()));
 
     }
 
@@ -177,33 +182,18 @@ public class AdminController {
     @PostMapping("/estimates/convert/{estimateId}")
     public ResponseEntity<String> convertExcelToPdf(@PathVariable("estimateId") Long estimateId) throws IOException {
         try {
-            // 1. S3에서 파일 다운로드
-            File excelFile = s3Service.downloadFileFromS3("estimates/" + estimateService.getEstimateFileName(estimateId));
+            Estimate estimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._ESTIMATES_NOT_FOUND));
 
-            String excelFileName = "estimates/" + estimateService.getEstimateFileName(estimateId);
-            // 2. 다운로드된 파일을 Docker 컨테이너의 /app 디렉터리로 저장
-            String excelFilePath = "/app/" + excelFile.getName();
-            String pdfFilePath = excelFileName.replace(".xlsx", ".pdf");
+            String petInfo = estimate.getPetInfo();
 
-            // 4. PDF 파일이 성공적으로 생성되었으면 PDF 파일 경로 반환
-            return new ResponseEntity<>("PDF 파일이 성공적으로 생성되었습니다: " + estimateService.convertExcelToPdf(excelFilePath, pdfFilePath, excelFileName), HttpStatus.OK);
+            return new ResponseEntity<>("PDF 파일이 성공적으로 생성되었습니다: " + estimateService.convertExcelToPdf(estimateId, petInfo), HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>("파일 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-//    @Operation(summary = "Admin 견적서 다운받기2222", description = "견적서를 pdf 파일로 다운로드합니다.")
-//    @Parameter(name = "estimateId", description = "견적서 ID", required = true, example = "1")
-//    @PostMapping("/estimates/converts/{estimateId}")
-//    public ResponseEntity<String> convertExcelToPdfs(@PathVariable("estimateId") Long estimateId) throws IOException {
-//        try {
-//            return new ResponseEntity<>("PDF 파일이 성공적으로 생성되었습니다: " + estimateService.convertExcelToPdfs(estimateId), HttpStatus.OK);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return new ResponseEntity<>("파일 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
 
     // 카드뉴스 이미지 업로드
     @Operation(summary = "Admin 카드뉴스 생성(이미지 업로드)", description = "카드뉴스 생성할 때 필요한 이미지를 업로드합니다.")

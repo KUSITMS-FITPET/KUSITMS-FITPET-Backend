@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class EstimateHistoryExportRequest {
 
-    private List<HistoryExportInfoDto> exportInfoDtoList;
+    private List<Long> ids;
 
 }
