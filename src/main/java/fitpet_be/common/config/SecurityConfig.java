@@ -70,9 +70,9 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize ->
                 authorize.requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-                    //.requestMatchers("/api/v1/fitpetAdmin/master/**").hasRole("MASTER")
-                    //.requestMatchers("/api/v1/fitpetAdmin/estimates/**").hasRole("ESTIMATES")
-                    //.requestMatchers("/api/v1/fitpetAdmin/cardNews/**").hasRole("CONTENTS")
+                    .requestMatchers("/api/v1/fitpetAdmin/master/**").hasRole("MASTER")
+                    .requestMatchers("/api/v1/fitpetAdmin/estimates/**").hasRole("ESTIMATES")
+                    .requestMatchers("/api/v1/fitpetAdmin/cardNews/**").hasRole("CONTENTS")
                     .anyRequest().permitAll())  // 나머지 요청은 인증 없이 접근 가능
             .exceptionHandling(handler ->
                 handler.authenticationEntryPoint(jwtAuthenticationEntryPoint)
