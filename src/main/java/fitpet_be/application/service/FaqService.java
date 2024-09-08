@@ -8,8 +8,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface FaqService {
 
-    PageResponse<FaqListResponse> getFaqList(Long category, Pageable pageable);
-
-    PageResponse<FaqListResponse> getFaqListSearch(FaqListSearchRequest request, Pageable pageable);
+    FaqListResponse getFaqList();
 
 }

@@ -4,20 +4,21 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 public class FaqListResponse {
 
-    private Long category;
-    private String question;
-    private String answer;
+    private List<FaqCategoryResponse> categories;
+    private List<FaqFaqsResponse> faqs;
 
     @Builder
-    public FaqListResponse (Long category, String question, String answer) {
+    public FaqListResponse(List<FaqCategoryResponse> categories,
+                           List<FaqFaqsResponse> faqs) {
 
-        this.category = category;
-        this.question = question;
-        this.answer = answer;
+        this.categories = categories;
+        this.faqs = faqs;
 
     }
 
