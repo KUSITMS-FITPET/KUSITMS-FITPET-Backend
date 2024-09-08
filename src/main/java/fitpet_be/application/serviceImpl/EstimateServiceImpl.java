@@ -30,6 +30,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -299,6 +302,54 @@ public class EstimateServiceImpl implements EstimateService {
             } else {
                 throw new IllegalArgumentException("Invalid petInfo value");
             }
+
+            FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+
+            // Iterate over each sheet and cell
+            for (int i = 0; i < 3; i++) {
+                XSSFSheet sheet = workbook.getSheetAt(i);
+
+                // Define the range to inspect
+                int startRow = 4; // Excel rows are 0-based in POI, so row 5 is index 4
+                int endRow = 32; // Excel rows are 0-based in POI, so row 33 is index 32
+                int startCol = 7; // Column H is index 7
+                int endCol = 20; // Column U is index 20
+
+                for (int rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
+                    Row row = sheet.getRow(rowIndex);
+                    if (row != null) {
+                        for (int colIndex = startCol; colIndex <= endCol; colIndex++) {
+                            Cell cell = row.getCell(colIndex);
+                            if (cell != null && cell.getCellType() == CellType.FORMULA) {
+                                try {
+                                    // Evaluate the cell's formula
+                                    CellValue cellValue = evaluator.evaluate(cell);
+                                    switch (cellValue.getCellType()) {
+                                        case NUMERIC:
+                                            cell.setCellValue(cellValue.getNumberValue());
+                                            break;
+                                        case STRING:
+                                            cell.setCellValue(cellValue.getStringValue());
+                                            break;
+                                        case BOOLEAN:
+                                            cell.setCellValue(cellValue.getBooleanValue());
+                                            break;
+                                        case BLANK:
+                                            cell.setCellType(CellType.BLANK);
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                } catch (Exception e) {
+                                    // Handle evaluation error (optional)
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
 
             for (int i = workbook.getNumberOfSheets() - 1; i >= 0; i--) {
                 if (!sheetsToKeep.contains(i)) {

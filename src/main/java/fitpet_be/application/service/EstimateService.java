@@ -1,6 +1,5 @@
 package fitpet_be.application.service;
 
-import fitpet_be.application.dto.HistoryExportInfoDto;
 import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.application.dto.request.EstimateServiceRequest;
 import fitpet_be.application.dto.request.EstimateUpdateRequest;
