@@ -1,12 +1,10 @@
 package fitpet_be.presentation.controller;
 
-import fitpet_be.application.dto.response.CardnewsDetailResponse;
 import fitpet_be.application.dto.response.CardnewsListResponse;
 import fitpet_be.application.service.CardnewsService;
 import fitpet_be.common.ApiResponse;
 import fitpet_be.common.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,16 +38,6 @@ public class CardNewsController {
         Pageable pageable = PageRequest.of(page -1, size);
 
         return ApiResponse.onSuccess(cardNewsService.getCardnewsListAsc(pageable));
-
-    }
-
-    @Operation(summary = "카드뉴스 상세페이지 조회", description = "특정 카드뉴스의 상세페이지를 조회합니다")
-    @Parameter(name = "cardNewsId", description = "카드뉴스 ID", required = true, example = "1")
-    @GetMapping("/{cardNewsId}")
-    public ApiResponse<CardnewsDetailResponse> getCardNewsDetail(
-            @PathVariable("cardNewsId") Long cardNewsId) {
-
-        return ApiResponse.onSuccess(cardNewsService.getCardnewsDetail(cardNewsId));
 
     }
 

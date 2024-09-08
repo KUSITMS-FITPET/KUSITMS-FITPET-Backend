@@ -1,10 +1,7 @@
 package fitpet_be.application.serviceImpl;
 
-import fitpet_be.application.dto.response.CardnewsDetailResponse;
 import fitpet_be.application.dto.response.CardnewsListResponse;
-import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.CardnewsService;
-import fitpet_be.common.ErrorStatus;
 import fitpet_be.common.PageResponse;
 import fitpet_be.domain.model.Cardnews;
 import fitpet_be.domain.repository.CardnewsRepository;
@@ -40,20 +37,6 @@ public class CardnewsServiceImpl implements CardnewsService {
 
     }
 
-    @Override
-    public CardnewsDetailResponse getCardnewsDetail(Long cardNewsId) {
-
-        Cardnews cardNews = cardNewsRepository.findById(cardNewsId)
-                .orElseThrow(() -> new ApiException(ErrorStatus._CARDNEWS_NOT_FOUND));
-
-        return CardnewsDetailResponse.builder()
-                .cardNewsId(cardNews.getId())
-                .cardNewsTitle(cardNews.getTitle())
-                .cardNewsContent((cardNews.getContentDetails()))
-                .image_url(cardNews.getImageUrl())
-                .build();
-
-    }
 
     private PageResponse<CardnewsListResponse> getCardnewsListResponsePageResponse(
             Page<Cardnews> cardNewsList) {
@@ -62,6 +45,7 @@ public class CardnewsServiceImpl implements CardnewsService {
                         .cardNewsId(cardNews.getId())
                         .cardNewsTitle(cardNews.getTitle())
                         .cardNewsContent(cardNews.getContent())
+                        .cardNewsContentDetail((cardNews.getContentDetails()))
                         .image_url(cardNews.getImageUrl())
                         .build())
                 .toList();
