@@ -1,6 +1,8 @@
 package fitpet_be.application.serviceImpl;
 
 import fitpet_be.application.dto.request.FaqListSearchRequest;
+import fitpet_be.application.dto.response.FaqCategoryResponse;
+import fitpet_be.application.dto.response.FaqFaqsResponse;
 import fitpet_be.application.dto.response.FaqListResponse;
 import fitpet_be.application.service.FaqService;
 import fitpet_be.common.PageResponse;
@@ -12,7 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -22,43 +24,37 @@ public class FaqServiceImpl implements FaqService {
     private final FaqRepository faqRepository;
 
     @Override
-    public PageResponse<FaqListResponse> getFaqList(Long category, Pageable pageable) {
+    public FaqListResponse getFaqList() {
+        List<Faq> faqsFromDb = faqRepository.findAll();
 
-        Page<Faq> faqs = faqRepository.findAllByCategory(category, pageable);
-        
-        Long totalCount = faqRepository.faqTotalCountByCategory(category);
+        List<FaqCategoryResponse> categoryResponses = new ArrayList<>();
+        List<FaqFaqsResponse> faqResponses = new ArrayList<>();
 
-        return getFaqListPageResponse(faqs, totalCount);
+        Set<Long> processedCategories = new HashSet<>();
 
-    }
+        for (Faq faq : faqsFromDb) {
+            FaqFaqsResponse faqResponse = FaqFaqsResponse.builder()
+                    .categoryId(faq.getCategoryId())
+                    .question(faq.getQuestion())
+                    .answer(faq.getAnswer())
+                    .build();
+            faqResponses.add(faqResponse);
 
-    @Override
-    public PageResponse<FaqListResponse> getFaqListSearch(FaqListSearchRequest request, Pageable pageable) {
+            if (!processedCategories.contains(faq.getCategoryId())) {
+                FaqCategoryResponse categoryResponse = FaqCategoryResponse.builder()
+                        .id(faq.getCategoryId())
+                        .name(faq.getCategoryName())
+                        .build();
+                categoryResponses.add(categoryResponse);
+                processedCategories.add(faq.getCategoryId());
+            }
+        }
 
-        Page<Faq> faqs = faqRepository.searchAllByKeywordAndCategory(request.getKeyword(), request.getCategory(), pageable);
-
-        Long totalCount = faqRepository.faqTotalCountByCategory(request.getCategory());
-
-        return getFaqListPageResponse(faqs, totalCount);
-
-    }
-
-    private PageResponse<FaqListResponse> getFaqListPageResponse(Page<Faq> faqs, Long totalCount) {
-
-        List<FaqListResponse> faqListResponses = faqs.stream()
-                .map(faq -> FaqListResponse.builder()
-                        .category(faq.getCategory())
-                        .question(faq.getQuestion())
-                        .answer(faq.getAnswer())
-                        .build())
-                .toList();
-
-        return PageResponse.<FaqListResponse>builder()
-                .listPageResponse(faqListResponses)
-                .totalCount(totalCount)
-                .size(faqListResponses.size())
+        return FaqListResponse.builder()
+                .categories(categoryResponses)
+                .faqs(faqResponses)
                 .build();
-
     }
+
     
 }
