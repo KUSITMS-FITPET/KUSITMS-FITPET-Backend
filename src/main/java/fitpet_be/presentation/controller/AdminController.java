@@ -7,15 +7,18 @@ import fitpet_be.application.dto.request.CardnewsCreateRequest;
 import fitpet_be.application.dto.request.CardnewsDeleteRequest;
 import fitpet_be.application.dto.request.CardnewsSearchRequest;
 import fitpet_be.application.dto.request.CardnewsUpdateRequest;
+import fitpet_be.application.dto.request.UrlCreateRequest;
 import fitpet_be.application.dto.response.AdminDetailResponse;
 import fitpet_be.application.dto.request.EstimateHistoryExportRequest;
 import fitpet_be.application.dto.request.EstimateSearchRequest;
 import fitpet_be.application.dto.request.EstimateUpdateRequest;
 import fitpet_be.application.dto.response.CardnewsListResponse;
 import fitpet_be.application.dto.response.EstimateListResponse;
+import fitpet_be.application.dto.response.UrlListResponse;
 import fitpet_be.application.exception.ApiException;
 import fitpet_be.application.service.AdminService;
 import fitpet_be.application.service.EstimateService;
+import fitpet_be.application.service.UrlService;
 import fitpet_be.common.ApiResponse;
 import fitpet_be.common.ErrorStatus;
 import fitpet_be.common.PageResponse;
@@ -58,6 +61,7 @@ public class AdminController {
     private final EstimateService estimateService;
     private final S3Service s3Service;
     private final EstimateRepository estimateRepository;
+    private final UrlService urlService;
 
     @Operation(summary = "Admin 로그인", description = "Admin 계정으로 로그인 합니다")
     @PostMapping("/login")
@@ -263,6 +267,23 @@ public class AdminController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         return ApiResponse.onSuccess(adminService.getCardnewsSearchList(request, pageable));
+
+    }
+
+
+    @Operation(summary = "Url 생성", description = "Url를 생성합니다")
+    @PostMapping("/url")
+    public ApiResponse<String> createUrls(@RequestBody UrlCreateRequest urlCreateRequest, HttpServletRequest request) {
+
+        return ApiResponse.onSuccess(urlService.createUrls(urlCreateRequest));
+
+    }
+
+    @Operation(summary = "Url 조회", description = "Url를 조회합니다")
+    @GetMapping("/url")
+    public ApiResponse<List<UrlListResponse>> getUrls(HttpServletRequest request) {
+
+        return ApiResponse.onSuccess(urlService.getUrlList());
 
     }
 
