@@ -8,6 +8,7 @@ import fitpet_be.common.PageResponse;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 
@@ -28,6 +29,10 @@ public interface EstimateService {
     String getEstimateFileName(Long estimateId);
 
     Resource convertExcelToPdf(Long estimateId, String petInfo) throws IOException;
+
+    CompletableFuture<String> generatePdfAsync(Long estimateId, String petInfo);
+
+    String getGeneratedPdfPath(Long estimateId);
 
 
 }
